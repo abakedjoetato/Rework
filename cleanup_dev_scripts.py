@@ -97,7 +97,7 @@ def should_preserve(file_path: str) -> bool:
     
     # Always preserve files in essential directories
     for essential_dir in ESSENTIAL_DIRS:
-        if dir_name == essential_dir or dir_name.startswith(ff"\1"):
+        if dir_name == essential_dir or dir_name.startswith("."):
             return True
     
     # Always preserve essential files
@@ -198,7 +198,7 @@ def cleanup_dev_scripts(dry_run: bool = False) -> Tuple[List[str], List[str]]:
                         print(f"Preserving essential file: {file_path}")
                     else:
                         deleted_files.append(file_path)
-                        print(ff"{\1}")
+                        print(f"  Preserved: {file_path}")
                         
                         # Move to backup instead of deleting
                         if dry_run is None:

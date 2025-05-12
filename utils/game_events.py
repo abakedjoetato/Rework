@@ -44,7 +44,7 @@ async def create_mission_embed(mission_event: Dict[str, Any], server: Server, gu
         embed.color = discord.Color.orange()
     
     # Add server name
-    embed.add_field(name="Server", value=server.server_name, inline=True)
+    embed.add_field(name="Server", value=server.name, inline=True)
     
     # Add event time
     timestamp = mission_event.get("timestamp", "Unknown")
@@ -73,7 +73,7 @@ async def create_airdrop_embed(airdrop_event: Dict[str, Any], server: Server, gu
     embed.color = discord.Color.blue()
     
     # Add server name
-    embed.add_field(name="Server", value=server.server_name, inline=True)
+    embed.add_field(name="Server", value=server.name, inline=True)
     
     # Add event time
     timestamp = airdrop_event.get("timestamp", "Unknown")
@@ -97,7 +97,7 @@ async def create_helicrash_embed(crash_event: Dict[str, Any], server: Server, gu
     embed.color = discord.Color.red()
     
     # Add server name
-    embed.add_field(name="Server", value=server.server_name, inline=True)
+    embed.add_field(name="Server", value=server.name, inline=True)
     
     # Add event time
     timestamp = crash_event.get("timestamp", "Unknown")
@@ -126,7 +126,7 @@ async def create_trader_embed(trader_event: Dict[str, Any], server: Server, guil
     embed.color = discord.Color.green()
     
     # Add server name
-    embed.add_field(name="Server", value=server.server_name, inline=True)
+    embed.add_field(name="Server", value=server.name, inline=True)
     
     # Add event time
     timestamp = trader_event.get("timestamp", "Unknown")
@@ -155,7 +155,7 @@ async def create_convoy_embed(convoy_event: Dict[str, Any], server: Server, guil
     embed.color = discord.Color.purple()
     
     # Add server name
-    embed.add_field(name="Server", value=server.server_name, inline=True)
+    embed.add_field(name="Server", value=server.name, inline=True)
     
     # Add event time
     timestamp = convoy_event.get("timestamp", "Unknown")
@@ -206,7 +206,7 @@ async def create_event_embed(event_data: Dict[str, Any], server: Server, guild: 
             )
             
             # Add server name
-            embed.add_field(name="Server", value=server.server_name, inline=True)
+            embed.add_field(name="Server", value=server.name, inline=True)
             
             # Add event time
             timestamp = event_data.get("timestamp", "Unknown")

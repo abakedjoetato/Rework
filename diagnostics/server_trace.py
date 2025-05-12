@@ -43,7 +43,7 @@ async def trace_server_config(db, server_id: str, guild_id: Optional[str] = None
         server_id: Server ID to trace
         guild_id: Optional Guild ID for additional filtering
     """
-    logger.info(ff"\1")
+    logger.info(f"Tracing server usage for guild ID: {guild_id}")
     
     # Standardize server_id
     std_server_id = standardize_server_id(server_id)

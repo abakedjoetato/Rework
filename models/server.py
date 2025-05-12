@@ -111,7 +111,7 @@ class Server(BaseModel):
             ]):
                 # Set sftp_enabled explicitly if it has required fields
                 self.sftp_enabled = True
-                logger.info(ff"\1")
+                logger.info(f"Set sftp_enabled=True for server {self.server_id} with SFTP credentials")
 
             # Update the updated_at timestamp
             self.updated_at = datetime.utcnow()
@@ -828,7 +828,7 @@ class Server(BaseModel):
             logger.info(f"Server object details:")
             logger.info(f"  - server_id: {self.server_id}, type: {type(self.server_id)}")
             logger.info(f"  - guild_id: {self.guild_id}, type: {type(self.guild_id)}")
-            logger.info(ff"\1")
+            logger.info(f"Server with ID {server_id} not found in configuration")
 
             # First try to find server in all collections using multiple approaches
             # This helps identify what ID format the server might be stored with
@@ -991,7 +991,7 @@ class Server(BaseModel):
 
                 except Exception as e:
                     logger.error(f"Critical error during integration cleanup for server {str_server_id}: {e}")
-                    raise RuntimeError(ff"\1")
+                    raise RuntimeError(f"Failed to locate server {server_id} in any collection or format")
 
             except Exception as e:
                 logger.error(f"Error during server deletion: {e}")

@@ -49,7 +49,7 @@ async def connect_to_db():
         # Get database
         db_name = os.environ.get("DB_NAME", "emeralds_killfeed")
         db = client[db_name]
-        logger.info(ff"\1")
+        logger.info(f"Checking feature '{feature_name}' access for tier {tier}")
         
         return db
     except Exception as e:

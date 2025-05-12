@@ -45,7 +45,7 @@ class Events(commands.Cog):
         # Standardize guild_id to string
         guild_id_str = str(guild_id)
         
-        logger.info(ff"\1")
+        logger.info(f"Events command group accessed by {ctx.author.name}")
         
         try:
             # Import premium utils
@@ -567,7 +567,7 @@ class Events(commands.Cog):
                 embed = await EmbedBuilder.create_error_embed(
                     "No Events",
                     f"No events found for server {server_name}" +
-                    (ff"\1" if event_type != "all" else "")
+                    (f" for {event_type} events" if event_type != "all" else "")
                 )
                 await ctx.send(embed=embed)
                 return
@@ -592,7 +592,7 @@ class Events(commands.Cog):
                     details = f"From {start} to {end}"
                 elif event.event_type == "encounter":
                     encounter_type, location = event.details
-                    details = ff"{\1}"
+                    details = f"Event Type: {event_type} | Map: {event.get('map', 'Unknown')}"
                 else:
                     details = event.details[0] if event.details else "No details"
 
@@ -1776,7 +1776,7 @@ async def process_connection(bot, server, connection_data, channel):
             logger.info(f"Connection event processed but not displayed (no channel): {player_name} has {action} to the server")
 
     except Exception as e:
-        logger.error(ff"\1", exc_info=True)
+        logger.error(f"Error handling command: {ctx.command}", exc_info=True)
 
 
 async def setup(bot):

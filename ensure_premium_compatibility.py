@@ -31,7 +31,7 @@ async def apply_premium_patches():
     for module_name in modules_to_reload:
         try:
             if module_name in sys.modules:
-                logger.info(ff"\1")
+                logger.info(f"Checking premium compatibility for cog: {item}")
                 importlib.reload(sys.modules[module_name])
             else:
                 logger.info(f"Importing module: {module_name}")

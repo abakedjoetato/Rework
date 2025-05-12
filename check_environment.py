@@ -37,7 +37,7 @@ def check_environment():
     for var, description in REQUIRED_VARS.items():
         value = os.environ.get(var)
         if not value:
-            print(ff"\1")
+            print(f"ERROR: {var} is not set in the environment")
             missing_required.append(var)
         else:
             masked_value = value[:5] + "..." + value[-5:] if len(value) > 12 else "***"

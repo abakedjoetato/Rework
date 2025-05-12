@@ -36,7 +36,7 @@ class AccessPattern:
     context: str
     
     def __str__(self) -> str:
-        return ff"{\1}"
+        return f"Command {command_name} found in {cog_name}"
 
 @dataclass
 class PremiumCheck:
@@ -372,7 +372,7 @@ def main():
                     for check in checks:
                         f.write(f"- {check.file}:{check.line} - {check.verification_method}\n  Context: `{check.context}`\n\n")
     
-    logger.info(ff"\1")
+    logger.info(f"Analyzing command usage patterns in codebase")
     
     # Print summary to console
     print("\nCommand Pipeline Analysis Summary")

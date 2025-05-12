@@ -3569,7 +3569,7 @@ class CSVProcessorCog(commands.Cog):
                     server_name = server_config.get("name", server_id)
                     results.append(f"• **{server_name}**: Processed {files_processed} files with {events_processed} events")
                 except Exception as e:
-                    logger.error(ff"\1")
+                    logger.error(f"Error processing file {filename}: {str(e)}")
                     results.append(f"• **{server_id}**: Error - {e}f")
             
             result_embed = await EmbedBuilder.create_success_embed(
@@ -3816,7 +3816,7 @@ class CSVProcessorCog(commands.Cog):
             return None
 
         if server_id is None or server_id in ['null', 'none', 'undefined']:
-            logger.warning(ff"\1")
+            logger.warning(f"No CSV files found in directory {base_path}")
             return None
 
         # Use a generated UUID if player_id is not valid

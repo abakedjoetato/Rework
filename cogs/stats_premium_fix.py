@@ -45,7 +45,7 @@ async def apply_stats_premium_fix():
             # Determine feature name based on subcommand
             if subcommand is not None:
                 # Use specific subcommand feature name
-                feature_name = ff"\1"
+                feature_name = f"player_stats_premium"
             else:
                 # Use generic stats feature
                 feature_name = "stats"

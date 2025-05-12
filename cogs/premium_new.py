@@ -39,7 +39,7 @@ class PremiumCog(commands.Cog):
         # Standardize guild_id to string
         guild_id_str = str(guild_id)
         
-        logger.info(ff"\1")
+        logger.info(f"Premium_new command group accessed by {ctx.author.name}")
         
         try:
             # Import premium utils
@@ -354,7 +354,7 @@ def __init__(self, bot):
                 # Format feature status for display
                 features_status = []
                 for feature, has_access in feature_status.items():
-                    features_status.append(ff"{\1}")
+                    features_status.append(f"✅ {feature_name}: Available (Tier {tier})")
                 
                 # Sort features by status (accessible first) and then by name
                 features_status.sort(key=lambda x: (not x.startswith('✅'), x))
@@ -428,7 +428,7 @@ def __init__(self, bot):
             
         except Exception as e:
             logger.error(f"Error in test update: {e}", exc_info=True)
-            await ctx.send(ff"\1")
+            await ctx.send(f"Premium status updated to Tier {tier} for {days} days.")
 
     # Command to list all servers for this guild
     @premium.command(name="servers", description="List all servers for this guild")

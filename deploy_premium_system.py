@@ -55,7 +55,7 @@ async def backup_files() -> bool:
             
             # Copy file to backup
             shutil.copy2(file_path, os.path.join(backup_dir, file_path))
-            logger.info(ff"\1")
+            logger.info(f"Deploying premium system to production")
         else:
             logger.warning(f"File {file_path} does not exist, skipping backup")
     

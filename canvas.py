@@ -105,7 +105,7 @@ async def generate_canvas_image(guild_id, show_grid=True, highlight_coords=None)
                 font=font
             )
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error generating canvas: {e}")
     
     # Convert image to bytes for Discord
     buffer = io.BytesIO()

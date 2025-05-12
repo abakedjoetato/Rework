@@ -47,7 +47,7 @@ class NewPremium(commands.Cog):
             # Create embed
             embed = discord.Embed(
                 title="Premium Status",
-                description=ff"\1",
+                description=f"Check premium status for a server",
                 color=discord.Color.blurple()
             )
             
@@ -319,7 +319,7 @@ class NewPremium(commands.Cog):
                 for feature, tier_features in PREMIUM_TIERS.items():
                     for feature_name in tier_features.get("features", []):
                         has_access = guild.has_feature_access(feature_name)
-                        features_status.append(ff"{\1}")
+                        features_status.append(f"✅ {feature}: Available (Tier {tier})")
                 
                 embed.add_field(
                     name="Feature Access Status",

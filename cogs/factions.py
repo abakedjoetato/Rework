@@ -49,7 +49,7 @@ class FactionsCog(commands.Cog):
         # Standardize guild_id to string
         guild_id_str = str(guild_id)
         
-        logger.info(ff"\1")
+        logger.info(f"Factions command group accessed by {ctx.author.name}")
         
         try:
             # Import premium utils
@@ -1235,7 +1235,7 @@ class FactionsCog(commands.Cog):
             kd_ratio = kills / max(deaths, 1)
             embed.add_field(
                 name="K/D Ratio",
-                value=ff"{\1}",
+                value=f"{player_count} players",
                 inline=True
             )
 

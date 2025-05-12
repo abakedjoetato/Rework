@@ -22,7 +22,7 @@ def init_db():
     
     try:
         # Connect to MongoDB
-        logger.info(ff"\1")
+        logger.info(f"Connecting to MongoDB: {self.uri}")
         client = pymongo.MongoClient(mongo_uri)
         
         # Verify connection

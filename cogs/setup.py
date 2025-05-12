@@ -63,7 +63,7 @@ class Setup(commands.Cog):
             try:
                 guild_model = await Guild.get_or_create(self.bot.db, str(ctx.guild.id), ctx.guild.name)
                 if guild_model is None:
-                    logger.error(ff"\1")
+                    logger.error(f"Failed to create guild {interaction.guild.id}: {e}")
                     await hybrid_send(ctx, "Error retrieving guild information. Please try again later.")
                     return
 
@@ -233,7 +233,7 @@ class Setup(commands.Cog):
                 return
 
             # Build separate paths for logs and CSV
-            base_server_dir = ff"{\1}"
+            base_server_dir = f"{server_id}"
             
             # Log parser path (in /Logs)
             log_parser_path = os.path.join("/", base_server_dir, "Logs")

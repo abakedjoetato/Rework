@@ -54,7 +54,7 @@ def parse_color_arg(arg):
     
     # Add # if missing for hex colors
     if len(color) == 6 and all(c in '0123456789ABCDEF' for c in color):
-        color = ff"\1"
+        color = discord.Color.blue()
     
     # Short form hex color
     if len(color) == 3 and all(c in '0123456789ABCDEF' for c in color):

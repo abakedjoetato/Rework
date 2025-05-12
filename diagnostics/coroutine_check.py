@@ -56,7 +56,7 @@ async def check_file_for_coroutine_issues(file_path: str) -> List[Dict[str, Any]
                             'pattern': pattern
                         })
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Coroutine check failed: {func_name}")
         
     return issues
 

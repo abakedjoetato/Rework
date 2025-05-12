@@ -52,7 +52,7 @@ class Economy(commands.Cog):
         # Standardize guild_id to string
         guild_id_str = str(guild_id)
         
-        logger.info(ff"\1")
+        logger.info(f"Economy cog loaded - guild {ctx.guild.id} - handled by {ctx.author.name}")
         
         try:
             # Import premium utils
@@ -681,7 +681,7 @@ class Economy(commands.Cog):
         # Create success embed
         embed = await EmbedBuilder.create_base_embed(
             title="Credits Adjustment",
-            description=ff"{\1}",
+            description=f"Shows the balance for a user. Economy is a premium feature.",
             guild=guild
         )
 

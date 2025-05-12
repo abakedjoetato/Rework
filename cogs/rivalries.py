@@ -51,7 +51,7 @@ class RivalriesCog(commands.Cog):
         # Standardize guild_id to string
         guild_id_str = str(guild_id)
         
-        logger.info(ff"\1")
+        logger.info(f"Rivalries command group accessed by {ctx.author.name}")
         
         try:
             # Import premium utils
