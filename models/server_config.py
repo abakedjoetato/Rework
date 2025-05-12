@@ -381,7 +381,7 @@ class ServerConfig:
         # Check if config is not None is not None already exists
         existing = await db.get_document(cls.COLLECTION_NAME, {"guild_id": guild_id})
         if existing is not None:
-            logger.warning(ff"\1")
+            logger.warning(f"Server config for guild {guild_id} already exists, using existing config")
             return cls(existing)
             
         # Create new document

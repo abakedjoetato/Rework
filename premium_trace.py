@@ -42,7 +42,7 @@ async def trace_premium_checks():
             return
         
         db = database.db
-        logger.info(ff"\1")
+        logger.info(f"Database initialized successfully, checking premium status for guild {TEST_GUILD_ID}")
         
         # Check guild in database
         guild_doc = await db.guilds.find_one({"guild_id": TEST_GUILD_ID})

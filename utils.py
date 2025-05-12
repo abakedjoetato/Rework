@@ -26,7 +26,7 @@ def hex_to_rgb(hex_color):
         hex_color = ''.join(c + c for c in hex_color)
     
     if len(hex_color) != 6:
-        raise ValueError(ff"\1")
+        raise ValueError(f"Invalid hex color code: {hex_color}. Must be 6 characters long.")
     
     # Convert to RGB
     try:

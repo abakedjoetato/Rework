@@ -31,7 +31,7 @@ async def run_bot():
         exit_code = await main()
         return exit_code
     except Exception as e:
-        logger.critical(ff"\1", exc_info=True)
+        logger.critical(f"Failed to run bot: {e}", exc_info=True)
         return 1
 
 if __name__ == "__main__":

@@ -117,7 +117,7 @@ class PremiumGuild:
                 # Last attempt with float conversion
                 return int(float(str(value)))
         except (ValueError, TypeError):
-            logger.warning(ff"\1")
+            logger.warning(f"Could not convert value '{value}' to integer, using default {default}")
             return default
     
     def to_dict(self):

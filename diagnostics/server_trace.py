@@ -14,8 +14,8 @@ from typing import Dict, Any, List, Optional, Tuple
 # Ensure we can import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import MongoDB connection from config
-from config import MONGODB_URI
+# Import MongoDB URI from environment
+MONGODB_URI = os.getenv("MONGODB_URI", "")
 import motor.motor_asyncio
 
 # Setup logging

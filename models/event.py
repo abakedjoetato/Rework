@@ -28,7 +28,7 @@ class Event:
         required_fields = ["server_id", "timestamp"]
         for field in required_fields:
             if field not in event_data:
-                raise ValueError(ff"\1")
+                raise ValueError(f"Missing required field '{field}' in event data")
 
         # Copy data to avoid modifying original
         event_data = event_data.copy()

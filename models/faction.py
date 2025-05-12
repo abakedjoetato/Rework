@@ -211,7 +211,7 @@ class Faction:
         # Check for existing faction with same name or tag
         existing_name = await cls.get_by_name(server_id, faction_name)
         if existing_name is not None:
-            raise ValueError(ff"\1")
+            raise ValueError(f"Faction with name '{faction_name}' already exists")
             
         existing_tag = await cls.get_by_tag(server_id, faction_tag)
         if existing_tag is not None:

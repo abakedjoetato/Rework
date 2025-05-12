@@ -33,7 +33,7 @@ class Rivalry(BaseModel):
         required_fields = ["player1_id", "player2_id", "guild_id", "server_id"]
         for field in required_fields:
             if field not in data:
-                raise ValueError(ff"\1")
+                raise ValueError(f"Missing required field '{field}' in rivalry data")
 
         # Ensure guild_id is stored as a string
         if "guild_id" in data:

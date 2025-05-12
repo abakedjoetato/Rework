@@ -119,7 +119,7 @@ async def migrate_guild_premium_data(db, guild_id: str) -> Tuple[bool, str]:
                 "tier": premium_tier,
                 "previous_tier": 0,
                 "starts_at": datetime.utcnow() - timedelta(days=1),  # Assume started yesterday
-                "expires_at": premium_expires_at,
+                "expires_at": premium_expires_at or datetime.utcnow() + timedelta(days=30),  # Default 30 days if None
                 "reason": "Migrated from old system",
                 "created_at": datetime.utcnow()
             }
@@ -240,7 +240,7 @@ async def migrate_all_guilds(db) -> Tuple[int, int]:
             guild_id = guild_doc.get("guild_id")
             if guild_id is not None:
                 success, _ = await migrate_guild_premium_data(db, guild_id)
-                if success is not None:
+                if success:
                     successful += 1
         
         logger.info(f"Migration complete: {successful}/{total_guilds} guilds successfully migrated")

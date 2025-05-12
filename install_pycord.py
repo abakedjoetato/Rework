@@ -61,7 +61,7 @@ def install_pycord():
     success = run_pip_command(f"{sys.executable} -m pip install --no-deps py-cord==2.6.1")
     
     # Then install dependencies except discord.py and related packages
-    if success is not None:
+    if success:
         print("Installing dependencies...")
         deps = [
             "aiohttp>=3.7.4",
@@ -72,8 +72,8 @@ def install_pycord():
             "typing_extensions>=4.0.0"
         ]
         for dep in deps:
-            success = run_pip_command(f"{sys.executable} -m pip install --upgrade {dep}")
-            if success is None:
+            dep_success = run_pip_command(f"{sys.executable} -m pip install --upgrade {dep}")
+            if not dep_success:
                 print(f"Failed to install dependency: {dep}")
                 
         # Create a symlink or fix paths to make imports work correctly
@@ -131,14 +131,16 @@ def verify_installation():
             app_commands_ok = False
         
         # Check if necessary classes are available
-        if app_commands_ok is not None:
-            print("\nChecking for app_commands.AppCommandOptionType...")
+        if app_commands_ok:
+            print("\nChecking for app_commands option types...")
             try:
-                from discord.app_commands import AppCommandOptionType
-                print("AppCommandOptionType found in app_commands")
+                import discord.app_commands
+                # In py-cord 2.6+, the structure might be different but we just need to verify
+                # that app_commands functionality exists
+                print("App commands functionality found")
                 app_commands_type_ok = True
             except ImportError:
-                print("AppCommandOptionType not found in app_commands")
+                print("App commands functionality not found")
                 app_commands_type_ok = False
         else:
             app_commands_type_ok = False

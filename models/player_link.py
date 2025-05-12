@@ -33,7 +33,7 @@ class PlayerLink(BaseModel):
         required_fields = ["player_id", "guild_id", "link_type"]
         for field in required_fields:
             if field not in data:
-                raise ValueError(ff"\1")
+                raise ValueError(f"Missing required field '{field}' in player link data")
 
         # Ensure guild_id is stored as a string
         if "guild_id" in data:

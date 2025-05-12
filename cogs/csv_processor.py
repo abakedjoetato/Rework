@@ -111,6 +111,22 @@ class CSVProcessorCog(commands.Cog):
         # Start background task
         self.process_csv_files_task.start()
         
+    @property
+    def servers(self):
+        """Get configured servers property
+        
+        Returns:
+            list: List of configured server dictionaries
+        """
+        try:
+            # Get from database if available
+            if hasattr(self.bot, 'db') and self.bot.db is not None and hasattr(self.bot.db, 'game_servers'):
+                return self.bot.db.game_servers
+        except Exception as e:
+            logger.error(f"Error accessing servers property: {e}")
+            
+        # Fallback to empty list
+        return []
     async def _load_state(self):
         """Load persisted CSV processing state from database"""
         try:
@@ -149,7 +165,12 @@ class CSVProcessorCog(commands.Cog):
                 server_count += 1
             
             if server_count > 0:
-                logger.info(f"CSV Processor starting: {len(self.servers)} servers configured")
+                try:
+                    server_count_log = len(list(self.servers)) if hasattr(self, 'servers') else 0
+                    logger.info(f"CSV Processor starting: {server_count_log} servers configured")
+                except Exception as e:
+                    logger.error(f"Error getting server count: {e}")
+                    
                 logger.info(f"Loaded {len(self.last_processed)} server timestamps")
                 
                 # Log detailed information about loaded timestamps
@@ -244,7 +265,75 @@ class CSVProcessorCog(commands.Cog):
             
     async def _save_state(self):
         """Save current CSV processing state to database for all servers"""
+        try:
+            # Make sure we have a DB connection
+            if self.bot.db is None:
+                logger.error("Cannot save CSV state: Database connection not available")
+                return
+            
+            # Save state for each server individually
+            servers_saved = 0
+            for server_id in set(list(self.last_processed.keys()) + list(self.last_processed_line_positions.keys())):
+                await self._save_server_state(server_id)
+                servers_saved += 1
+            
+            if servers_saved > 0:
+                logger.debug(f"Saved CSV processor state for {servers_saved} servers")
+        except Exception as e:
+            logger.error(f"Error saving CSV state: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # Continue anyway to avoid breaking functionality
 
+    async def resolve_server_id(self, server_id_or_name):
+        """Resolve a server ID or name to a valid server ID
+        
+        Args:
+            server_id_or_name: Server ID or name to resolve
+            
+        Returns:
+            str: Resolved server ID or None if not found
+        """
+        try:
+            # If the bot db isn't available, return the input
+            if not hasattr(self.bot, 'db') or self.bot.db is None:
+                logger.warning("Cannot resolve server ID: Database not available")
+                return server_id_or_name
+                
+            # Try to find the server directly by ID
+            server = None
+            try:
+                if hasattr(self.bot.db, 'game_servers'):
+                    server = await self.bot.db.game_servers.find_one({"_id": server_id_or_name})
+            except Exception as e:
+                logger.error(f"Error finding server by ID: {e}")
+            
+            # If found, return the ID
+            if server:
+                return server["_id"]
+                
+            # Try to find the server by name (case insensitive)
+            try:
+                if hasattr(self.bot.db, 'game_servers'):
+                    server = await self.bot.db.game_servers.find_one(
+                        {"name": {"$regex": f"^{re.escape(server_id_or_name)}$", "$options": "i"}}
+                    )
+            except Exception as e:
+                logger.error(f"Error finding server by name: {e}")
+                
+            # If found, return the ID
+            if server:
+                return server["_id"]
+                
+            # If not found, return the input
+            return server_id_or_name
+            
+        except Exception as e:
+            logger.error(f"Error resolving server ID: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return server_id_or_name
+            
     async def _check_server_activity(self, server_id, events_found):
         """Track server activity for adaptive processing
 
@@ -287,34 +376,25 @@ class CSVProcessorCog(commands.Cog):
         # Default to standard interval
         return self.default_check_interval
 
-        try:
-            # Make sure we have a DB connection
-            if self.bot.db is None:
-                logger.error("Cannot save CSV state: Database connection not available")
-                return
-            
-            # Save state for each server individually
-            servers_saved = 0
-            for server_id in set(list(self.last_processed.keys()) + list(self.last_processed_line_positions.keys())):
-                await self._save_server_state(server_id)
-                servers_saved += 1
-            
-            if servers_saved > 0:
-                logger.debug(f"Saved CSV processor state for {servers_saved} servers")
-        except Exception as e:
-            logger.error(f"Error saving CSV state: {e}")
-            # Continue anyway to avoid breaking functionality
-
-    def cog_unload(self):
+    async def cog_unload(self):
         """Stop background tasks and close connections when cog is unloaded"""
+        # Cancel the background task
         self.process_csv_files_task.cancel()
 
-        # Close all SFTP connections
+        # Try to save state one final time before unloading
+        try:
+            await self._save_state()
+        except Exception as e:
+            logger.error(f"Error saving CSV state during unload: {e}")
+
+        # Close all SFTP connections - properly await them
         for server_id, sftp_manager in self.sftp_managers.items():
             try:
-                asyncio.create_task(sftp_manager.disconnect())
+                await sftp_manager.disconnect()
             except Exception as e:
                 logger.error(f"Error disconnecting SFTP for server {server_id}: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
 
     @tasks.loop(minutes=5.0)  # Set back to 5 minutes as per requirements
     async def process_csv_files_task(self):
@@ -324,7 +404,8 @@ class CSVProcessorCog(commands.Cog):
         """
         logger.debug(f"Starting CSV processor task at {datetime.now().strftime('%H:%M:%S')}")
 
-        if self.is_processing is not None:
+        # Use boolean comparison instead of 'is not None'
+        if self.is_processing:
             logger.debug("Skipping CSV processing - already running")
             return
             
@@ -348,6 +429,7 @@ class CSVProcessorCog(commands.Cog):
             pass  # psutil not available, continue anyway
         except Exception as e:
             logger.error(f"Error checking memory usage: {e}")
+            # Continue even if we can't check memory usage
 
         self.is_processing = True
         start_time = time.time()
@@ -2920,10 +3002,9 @@ class CSVProcessorCog(commands.Cog):
             # Record the starting ID for logging
             raw_input_id = server_id if server_id is not None else ""
 
-            # Import identity resolver functions
+            # Import utility functions - avoid importing resolve_server_id from server_identity
             from utils.server_utils import safe_standardize_server_id
-            from utils.server_identity import resolve_server_id, identify_server, KNOWN_SERVERS
-
+            
             logger.info(f"Starting historical parse for server {raw_input_id}, looking back {days} days")
         except Exception as e:
             logger.error(f"Error in historical parse preparation: {e}")
@@ -2931,8 +3012,8 @@ class CSVProcessorCog(commands.Cog):
             # Early return on preparation failure
             return files_processed, events_inserted
 
-        # STEP 1: Try to resolve the server ID comprehensively using our new function
-        server_resolution = await resolve_server_id(self.bot.db, server_id, guild_id)
+        # STEP 1: Try to resolve the server ID comprehensively using our instance method
+        server_resolution = {"server_id": await self.resolve_server_id(server_id), "original_server_id": server_id}
         if server_resolution is not None:
             resolved_server_id = server_resolution.get("server_id")
             original_server_id = server_resolution.get("original_server_id")

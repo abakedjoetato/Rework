@@ -88,9 +88,9 @@ class BaseModel:
             String representation
         """
         if hasattr(self, 'name') and getattr(self, 'name') is not None:
-            return ff"{\1}"
+            return f"{self.__class__.__name__} (name: {getattr(self, 'name')})"
         elif hasattr(self, '_id') and self._id is not None:
-            return ff"\1"
+            return f"{self.__class__.__name__} (id: {self._id})"
         else:
             return f"{self.__class__.__name__} (New)"
     

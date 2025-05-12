@@ -44,7 +44,7 @@ class Player(BaseModel):
             import uuid
 
             player_id = f"recovered_{uuid.uuid4()}"
-            logger.warning(ff"\1")
+            logger.warning(f"Using emergency fallback player_id: {player_id}")
 
         if server_id is None or server_id == "":
             logger.error("Attempted to create Player with empty server_id")

@@ -39,7 +39,7 @@ def main():
             asyncio.run(main.main())
             
         except ImportError as e:
-            logger.critical(ff"\1")
+            logger.critical(f"Failed to import main module: {e}")
             return 1
             
     except KeyboardInterrupt:

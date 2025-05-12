@@ -107,7 +107,7 @@ class DiscordGuild(db.Model):
         return self.premium_tier
     
     def __repr__(self):
-        return ff"\1"
+        return f"Guild(id={self.id}, name='{self.name}', premium_tier={self.premium_tier})"
 
 
 class GameServer(db.Model):

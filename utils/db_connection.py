@@ -52,6 +52,7 @@ async def get_database_client(max_retries: int = 3, retry_delay: int = 2) -> Asy
         raise DatabaseConnectionError(f"Invalid MongoDB URI: {error_message}")
     
     # Try to connect with retries
+    last_exception = None
     for attempt in range(1, max_retries + 1):
         try:
             logger.info(f"Connecting to MongoDB (attempt {attempt}/{max_retries})...")
@@ -64,6 +65,7 @@ async def get_database_client(max_retries: int = 3, retry_delay: int = 2) -> Asy
             return client
             
         except (ConnectionFailure, ServerSelectionTimeoutError, ConfigurationError) as e:
+            last_exception = e
             logger.error(f"Failed to connect to MongoDB (attempt {attempt}/{max_retries}): {e}")
             
             if attempt < max_retries:
@@ -77,6 +79,15 @@ async def get_database_client(max_retries: int = 3, retry_delay: int = 2) -> Asy
             error_msg = f"Unexpected error connecting to MongoDB: {e}"
             logger.critical(error_msg)
             raise DatabaseConnectionError(error_msg) from e
+    
+    # This code should never be reached because we either return a client or raise an exception
+    # But we add it to satisfy the type checker that a value is always returned
+    if last_exception:
+        raise DatabaseConnectionError(f"Failed to connect to MongoDB: {last_exception}") from last_exception
+    else:
+        raise DatabaseConnectionError("Failed to connect to MongoDB for unknown reasons")
+    # This line will never be reached but ensures the type checker is satisfied
+    return AsyncIOMotorClient(uri)
 
 def validate_mongodb_uri(uri: str) -> Tuple[bool, str]:
     """
@@ -124,35 +135,39 @@ def validate_mongodb_uri(uri: str) -> Tuple[bool, str]:
     except Exception as e:
         return False, f"URI parsing error: {str(e)}"
 
-async def test_database_connection() -> Dict[str, Any]:
+async def test_database_connection() -> Tuple[bool, str]:
     """
-    Test the database connection and return connection information.
+    Test the database connection and return status.
     
     Returns:
-        Dict with connection test results
+        Tuple of (success, message)
     """
-    result = {
-        "success": False,
-        "error": None,
-        "connection_info": None
-    }
-    
     try:
         client = await get_database_client()
         server_info = await client.admin.command('serverStatus')
         
-        result["success"] = True
-        result["connection_info"] = {
-            "version": server_info.get("version", "Unknown"),
-            "uptime": server_info.get("uptime", 0),
-            "connections": server_info.get("connections", {}).get("current", 0)
-        }
+        version = server_info.get("version", "Unknown")
+        connections = server_info.get("connections", {}).get("current", 0)
+        
+        return True, f"Connected to MongoDB version {version} with {connections} current connections"
         
     except DatabaseConnectionError as e:
-        result["error"] = str(e)
+        return False, str(e)
     except Exception as e:
-        result["error"] = f"Unexpected error: {str(e)}"
+        return False, f"Unexpected error: {str(e)}"
+
+async def get_database():
+    """
+    Get a MongoDB database instance with proper error handling.
     
-    return result
+    Returns:
+        MongoDB database instance
+    
+    Raises:
+        DatabaseConnectionError: If connection fails
+    """
+    client = await get_database_client()
+    db_name = os.environ.get("DB_NAME", "mukti_bot")
+    return client[db_name]
 
 # No fallback URIs - if the primary connection fails, it's a critical error

@@ -442,7 +442,7 @@ class Bounty(BaseModel):
             await db.bounties.insert_one(bounty.to_document())
             return bounty
         except Exception as e:
-            logger.error(ff"\1")
+            logger.error(f"Error creating bounty: {e}")
             return None
     
     @classmethod

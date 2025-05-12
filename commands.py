@@ -2,7 +2,8 @@
 Utility functions for command parsing and handling.
 """
 import logging
-import utils
+import re
+import discord
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,13 @@ def parse_coord_args(args):
         return None
     
     # If it's a combined argument (like "10,20")
-    combined_coords = utils.normalize_oycoord(args)
-    if combined_coords is not None:
-        return combined_coords
+    # Use direct parsing instead of relying on external utilities
+    try:
+        if ',' in args:
+            x, y = map(int, args.split(',', 1))
+            return (x, y)
+    except (ValueError, TypeError):
+        pass
     
     # If it's separate arguments
     parts = args.replace(',', ' ').split()
@@ -49,33 +54,42 @@ def parse_color_arg(arg):
     if arg is None:
         return None
     
-    # Clean the input
-    color = arg.strip().upper()
-    
-    # Add # if missing for hex colors
-    if len(color) == 6 and all(c in '0123456789ABCDEF' for c in color):
-        color = discord.Color.blue()
-    
-    # Short form hex color
-    if len(color) == 3 and all(c in '0123456789ABCDEF' for c in color):
-        color = f"#{color}"
-    
-    # Validate the color
-    if utils.is_valid_color(color):
-        return color
-    
-    # Color name mapping (limited set)
-    color_map = {
-        "RED": "#FF0000",
-        "GREEN": "#00FF00",
-        "BLUE": "#0000FF",
-        "YELLOW": "#FFFF00",
-        "PURPLE": "#800080",
-        "ORANGE": "#FFA500",
-        "BLACK": "#000000",
-        "WHITE": "#FFFFFF",
-        "GRAY": "#808080",
-        "PINK": "#FFC0CB"
-    }
-    
-    return color_map.get(color, None)
+    try:
+        # Clean the input
+        color = arg.strip().upper()
+        
+        # Add # if missing for hex colors (6 digits)
+        if len(color) == 6 and all(c in '0123456789ABCDEF' for c in color):
+            color = f"#{color}"
+        
+        # Short form hex color (3 digits)
+        elif len(color) == 3 and all(c in '0123456789ABCDEF' for c in color):
+            color = f"#{color}"
+        
+        # Validate the color (basic hex validation)
+        if color.startswith('#') and len(color) in (4, 7) and all(c in '0123456789ABCDEF' for c in color[1:]):
+            return color
+        
+        # Color name mapping (limited set)
+        color_map = {
+            "RED": "#FF0000",
+            "GREEN": "#00FF00",
+            "BLUE": "#0000FF",
+            "YELLOW": "#FFFF00",
+            "PURPLE": "#800080",
+            "ORANGE": "#FFA500",
+            "BLACK": "#000000",
+            "WHITE": "#FFFFFF",
+            "GRAY": "#808080",
+            "PINK": "#FFC0CB"
+        }
+        
+        mapped_color = color_map.get(color)
+        if mapped_color:
+            return mapped_color
+            
+        # If we reach here, color is invalid
+        return None
+    except Exception as e:
+        logger.error(f"Error parsing color argument: {e}")
+        return None

@@ -121,7 +121,7 @@ class PremiumFeature:
                         return await func(*args, **kwargs)
                 
                 # If we couldn't determine context, just run the command
-                logger.warning(ff"\1")
+                logger.warning(f"Could not determine Discord context for premium feature '{feature_name}' check, allowing command execution")
                 return await func(*args, **kwargs)
             
             # Add attribute to help with command documentation

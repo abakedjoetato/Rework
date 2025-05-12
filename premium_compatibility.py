@@ -75,7 +75,7 @@ async def get_premium_tier(db, guild_id: str) -> int:
         return 0
         
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error checking premium tier for guild {guild_id}: {e}")
         return 0
 
 
