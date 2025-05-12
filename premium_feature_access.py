@@ -112,7 +112,7 @@ class PremiumFeature:
                                 try:
                                     # Try to respond if interaction not responded to yet
                                     await interaction.response.send_message(error_message, ephemeral=True)
-                                except discord.get_error()s.InteractionResponded:
+                                except discord.errors.InteractionResponded:
                                     # Fallback if interaction already responded to
                                     await interaction.followup.send(error_message, ephemeral=True)
                             return None
@@ -168,7 +168,7 @@ class PremiumFeature:
         """
         # Create cache key
         str_guild_id = str(guild_id)
-        cache_key = ff"{\1}"
+        cache_key = f"premium_feature_access:{str_guild_id}:{feature_name}"
         
         # Check cache first (optimization)
         if cache_key in _feature_check_cache:

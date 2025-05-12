@@ -2,6 +2,7 @@
 Compatibility layer for transitioning from old premium system to new system.
 This module provides seamless integration during the migration period.
 """
+import inspect
 import logging
 import functools
 from typing import Optional, Callable, Dict, Any, Union, Tuple
@@ -32,11 +33,22 @@ async def get_premium_tier(db, guild_id: str) -> int:
     try:
         # Try new system first
         guild = await PremiumGuild.get_by_guild_id(db, guild_id)
-        if guild is not None is not None:
-            # Update cache
-            _guild_cache[guild_id] = {"tier": guild.premium_tier, "expires_at": guild.premium_expires_at}
-            # Return current valid tier (handles expiration check)
-            return guild.check_premium_status()
+        if guild is not None:
+            try:
+                # Update cache - safely access attributes with proper null checks
+                premium_tier = getattr(guild, 'premium_tier', 0)
+                premium_expires_at = getattr(guild, 'premium_expires_at', None)
+                _guild_cache[guild_id] = {"tier": premium_tier, "expires_at": premium_expires_at}
+                
+                # Call check_premium_status safely
+                if hasattr(guild, 'check_premium_status') and callable(guild.check_premium_status):
+                    return guild.check_premium_status()
+                else:
+                    # Fallback if method doesn't exist
+                    return premium_tier
+            except Exception as e:
+                logger.error(f"Error handling PremiumGuild object: {e}")
+                # Continue to fallback approach
             
         # Fall back to old system
         guild_doc = await db.guilds.find_one({"guild_id": guild_id})
@@ -94,7 +106,7 @@ async def check_feature_access(db, guild_id: str, feature_name: str) -> bool:
     """
     try:
         # Create cache key
-        cache_key = ff"{\1}"
+        cache_key = f"premium_access:{guild_id}:{feature_name}"
         
         # Try new system first
         guild = await PremiumGuild.get_by_guild_id(db, guild_id)
@@ -122,11 +134,27 @@ async def check_feature_access(db, guild_id: str, feature_name: str) -> bool:
             # Fall back to direct tier comparison
             try:
                 from utils.premium import get_minimum_tier_for_feature
+                # Get the premium tier for the guild
                 tier = await get_premium_tier(db, guild_id)
-                min_tier = get_minimum_tier_for_feature(feature_name)
+                tier_int = int(tier) if isinstance(tier, (int, str, float)) else 0
                 
-                if min_tier is not None:
-                    has_access = tier >= min_tier
+                # Get the minimum tier required for the feature
+                min_tier = None
+                try:
+                    if inspect.iscoroutinefunction(get_minimum_tier_for_feature):
+                        min_tier = await get_minimum_tier_for_feature(feature_name)
+                    else:
+                        min_tier = get_minimum_tier_for_feature(feature_name)
+                except Exception as e:
+                    logger.error(f"Error getting minimum tier for {feature_name}: {e}")
+                    min_tier = None
+                
+                # Convert to int safely
+                min_tier_int = int(min_tier) if isinstance(min_tier, (int, str, float)) else 0
+                
+                # Check if the guild's tier is sufficient
+                if min_tier_int is not None:
+                    has_access = tier_int >= min_tier_int
                     # Update cache
                     _feature_cache[cache_key] = has_access
                     return has_access
@@ -229,7 +257,7 @@ def requires_premium_feature_compat(feature_name: str):
                             try:
                                 # Try to respond if interaction not responded to yet
                                 await interaction.response.send_message(error_message, ephemeral=True)
-                            except discord.get_error()s.InteractionResponded:
+                            except discord.errors.InteractionResponded:
                                 # Fallback if interaction already responded to
                                 await interaction.followup.send(error_message, ephemeral=True)
                         else:
@@ -239,7 +267,7 @@ def requires_premium_feature_compat(feature_name: str):
                                     "This command requires premium tier. Use `/premium upgrade` for more information.",
                                     ephemeral=True
                                 )
-                            except discord.get_error()s.InteractionResponded:
+                            except discord.errors.InteractionResponded:
                                 await interaction.followup.send(
                                     "This command requires premium tier. Use `/premium upgrade` for more information.",
                                     ephemeral=True

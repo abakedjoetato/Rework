@@ -77,7 +77,7 @@ class PremiumDashboard:
             # Get database
             db_name = os.environ.get("DB_NAME", "emeralds_killfeed")
             self.db = client[db_name]
-            logger.info(ff"\1")
+            logger.info(f"Connected to MongoDB database: {db_name}")
             
             # Import premium utils
             try:

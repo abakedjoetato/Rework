@@ -50,7 +50,7 @@ class PremiumExampleCog(commands.Cog):
         feature_tier = get_feature_tier(feature)
         
         if feature_tier is None:
-            await ctx.send(ff"\1")
+            await ctx.send(f"Unknown feature: {feature}. Please check available premium features.")
             return
         
         # Check access

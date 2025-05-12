@@ -94,7 +94,7 @@ def requires_premium_feature(feature_name: str):
                             try:
                                 # Try to respond if interaction not responded to yet
                                 await interaction.response.send_message(error_message, ephemeral=True)
-                            except discord.get_error()s.InteractionResponded:
+                            except discord.errors.InteractionResponded:
                                 # Fallback if interaction already responded to
                                 await interaction.followup.send(error_message, ephemeral=True)
                         return None
