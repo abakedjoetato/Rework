@@ -68,16 +68,23 @@ class PremiumDashboard:
                 return False
                 
             # Connect to MongoDB
-            logger.info("Connecting to MongoDB...")
-            client = motor.motor_asyncio.AsyncIOMotorClient(
-                mongo_uri, 
-                serverSelectionTimeoutMS=5000
-            )
-            
-            # Get database
-            db_name = os.environ.get("DB_NAME", "emeralds_killfeed")
-            self.db = client[db_name]
-            logger.info(f"Connected to MongoDB database: {db_name}")
+            try:
+                logger.info("Connecting to MongoDB...")
+                client = motor.motor_asyncio.AsyncIOMotorClient(
+                    mongo_uri, 
+                    serverSelectionTimeoutMS=5000
+                )
+                
+                # Verify connection is working
+                await client.admin.command('ping')
+                
+                # Get database
+                db_name = os.environ.get("DB_NAME", "emeralds_killfeed")
+                self.db = client[db_name]
+                logger.info(f"Connected to MongoDB database: {db_name}")
+            except Exception as db_error:
+                logger.error(f"Failed to connect to MongoDB: {db_error}")
+                self.db = None
             
             # Import premium utils
             try:
@@ -100,41 +107,62 @@ class PremiumDashboard:
         self.guild_tiers = {}
         
         try:
-            # Known test guild with tier 4
+            # Known test guild with tier 4 - with proper null safety
             self.test_guild_id = "1219706687980568769"
-            test_guild = await self.db.guilds.find_one({"guild_id": self.test_guild_id})
-            
-            if test_guild is not None:
-                premium_tier = test_guild.get("premium_tier", 0)
-                if isinstance(premium_tier, str):
-                    try:
-                        premium_tier = int(premium_tier)
-                    except ValueError:
-                        premium_tier = 0
-                        
-                logger.info(f"Found test guild with ID {self.test_guild_id} and tier {premium_tier}")
-                self.guild_tiers[premium_tier] = {
-                    "guild_id": self.test_guild_id,
-                    "name": test_guild.get("name", "Unknown"),
-                    "features": []
-                }
+            try:
+                if self.db is not None:
+                    test_guild = await self.db.guilds.find_one({"guild_id": self.test_guild_id})
+                    
+                    if test_guild is not None:
+                        # Safely extract premium tier with type checking
+                        premium_tier = test_guild.get("premium_tier", 0)
+                        if premium_tier is None:
+                            premium_tier = 0
+                        elif isinstance(premium_tier, str):
+                            try:
+                                premium_tier = int(premium_tier)
+                            except ValueError:
+                                premium_tier = 0
+                                
+                        logger.info(f"Found test guild with ID {self.test_guild_id} and tier {premium_tier}")
+                        self.guild_tiers[premium_tier] = {
+                            "guild_id": self.test_guild_id,
+                            "name": test_guild.get("name", "Unknown"),
+                            "features": []
+                        }
+                    else:
+                        logger.warning(f"Test guild with ID {self.test_guild_id} not found")
+                else:
+                    logger.error("Database connection is None")
+            except Exception as e:
+                logger.error(f"Error retrieving test guild: {e}")
             
             # Find additional guilds for other tiers
             for tier in range(5):
                 if tier not in self.guild_tiers:
-                    # Find a guild with this tier
-                    guild = await self.db.guilds.find_one({"premium_tier": tier})
-                    
-                    if guild is not None is not None:
-                        guild_id = guild.get("guild_id")
-                        logger.info(f"Found guild with ID {guild_id} and tier {tier}")
-                        self.guild_tiers[tier] = {
-                            "guild_id": guild_id,
-                            "name": guild.get("name", "Unknown"),
-                            "features": []
-                        }
-                    else:
-                        logger.warning(f"No guild found with tier {tier}")
+                    # Find a guild with this tier - with null check for database
+                    try:
+                        if self.db is not None:
+                            guild = await self.db.guilds.find_one({"premium_tier": tier})
+                            
+                            if guild is not None:  # Fixed duplicate is not None check
+                                # Safely access guild_id with proper null checks
+                                guild_id = guild.get("guild_id")
+                                if guild_id is not None:
+                                    logger.info(f"Found guild with ID {guild_id} and tier {tier}")
+                                    self.guild_tiers[tier] = {
+                                        "guild_id": guild_id,
+                                        "name": guild.get("name", "Unknown"),
+                                        "features": []
+                                    }
+                                else:
+                                    logger.warning(f"Found guild with tier {tier} but missing guild_id")
+                        else:
+                            logger.error("Database connection is None")
+                    except Exception as e:
+                        logger.error(f"Error retrieving guild with tier {tier}: {e}")
+                else:
+                    logger.warning(f"No guild found with tier {tier}")
             
             return len(self.guild_tiers) > 0
             
@@ -155,7 +183,12 @@ class PremiumDashboard:
             required_tier = self.premium_utils.FEATURE_TIERS.get(mapped_feature, 4)
             
             # Get guild info
-            guild_doc = await self.db.guilds.find_one({"guild_id": guild_id})
+            guild_doc = None
+            if self.db is not None:
+                try:
+                    guild_doc = await self.db.guilds.find_one({"guild_id": guild_id})
+                except Exception as e:
+                    logger.error(f"Error querying guild document: {e}")
             if guild_doc is not None:
                 guild_tier = guild_doc.get("premium_tier", 0)
                 if isinstance(guild_tier, str):

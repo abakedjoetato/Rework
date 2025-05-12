@@ -111,10 +111,19 @@ async def check_feature_access(db, guild_id: str, feature_name: str) -> bool:
         # Try new system first
         guild = await PremiumGuild.get_by_guild_id(db, guild_id)
         if guild is not None:
-            has_access = guild.has_feature_access(feature_name)
-            # Update cache
-            _feature_cache[cache_key] = has_access
-            return has_access
+            try:
+                # Safely access the method with proper null checks
+                if hasattr(guild, 'has_feature_access') and callable(guild.has_feature_access):
+                    has_access = guild.has_feature_access(feature_name)
+                    # Update cache
+                    _feature_cache[cache_key] = has_access
+                    return has_access
+                else:
+                    logger.warning(f"PremiumGuild missing has_feature_access method for {guild_id}")
+                    # Continue to fallback approach
+            except Exception as e:
+                logger.error(f"Error checking feature access with PremiumGuild: {e}")
+                # Continue to fallback approach
             
         # Fall back to old system
         from utils.premium import has_feature_access
@@ -209,16 +218,23 @@ def requires_premium_feature_compat(feature_name: str):
                     has_access = await check_feature_access(db, str(guild_id), feature_name)
                     
                     # If no access, send error message
-                    if has_access is None:
-                        # Try to get a detailed error message from new system
-                        guild = await PremiumGuild.get_by_guild_id(db, str(guild_id))
-                        _, error_message = await validate_premium_feature(db, guild, feature_name)
+                    if not has_access:
+                        try:
+                            # Try to get a detailed error message from new system
+                            guild = await PremiumGuild.get_by_guild_id(db, str(guild_id))
+                            
+                            # Check if validate_premium_feature exists and is callable
+                            if guild is not None and hasattr(guild, "validate_premium_feature") and inspect.iscoroutinefunction(validate_premium_feature):
+                                _, error_message = await validate_premium_feature(db, guild, feature_name)
+                                
+                                if error_message is not None:
+                                    await ctx.send(error_message)
+                                    return None
+                        except Exception as e:
+                            logger.error(f"Error validating premium feature access: {e}")
                         
-                        if error_message is not None:
-                            await ctx.send(error_message)
-                        else:
-                            # Generic message if detailed error not available
-                            await ctx.send("This command requires premium tier. Use `/premium upgrade` for more information.")
+                        # Generic message if detailed error not available or an exception occurred
+                        await ctx.send("This command requires premium tier. Use `/premium upgrade` for more information.")
                         return None
                     
                     # Access granted, continue with command
@@ -248,30 +264,43 @@ def requires_premium_feature_compat(feature_name: str):
                     has_access = await check_feature_access(db, str(interaction.guild_id), feature_name)
                     
                     # If no access, send error message
-                    if has_access is None:
-                        # Try to get a detailed error message from new system
-                        guild = await PremiumGuild.get_by_guild_id(db, str(interaction.guild_id))
-                        _, error_message = await validate_premium_feature(db, guild, feature_name)
+                    if not has_access:
+                        try:
+                            # Try to get a detailed error message from new system
+                            guild = await PremiumGuild.get_by_guild_id(db, str(interaction.guild_id))
+                            
+                            error_message = None
+                            # Check if validate_premium_feature exists and is callable
+                            if guild is not None and hasattr(guild, "validate_premium_feature") and inspect.iscoroutinefunction(validate_premium_feature):
+                                _, error_message = await validate_premium_feature(db, guild, feature_name)
+                            
+                            # Send specific error message if available
+                            if error_message is not None:
+                                try:
+                                    if not interaction.response.is_done():
+                                        await interaction.response.send_message(error_message, ephemeral=True)
+                                    else:
+                                        await interaction.followup.send(error_message, ephemeral=True)
+                                    return None
+                                except Exception as e:
+                                    logger.error(f"Error sending premium access message: {e}")
+                        except Exception as e:
+                            logger.error(f"Error validating premium feature access: {e}")
                         
-                        if error_message is not None:
-                            try:
-                                # Try to respond if interaction not responded to yet
-                                await interaction.response.send_message(error_message, ephemeral=True)
-                            except discord.errors.InteractionResponded:
-                                # Fallback if interaction already responded to
-                                await interaction.followup.send(error_message, ephemeral=True)
-                        else:
-                            # Generic message if detailed error not available
-                            try:
+                        # Generic message as fallback
+                        try:
+                            if not interaction.response.is_done():
                                 await interaction.response.send_message(
                                     "This command requires premium tier. Use `/premium upgrade` for more information.",
                                     ephemeral=True
                                 )
-                            except discord.errors.InteractionResponded:
+                            else:
                                 await interaction.followup.send(
                                     "This command requires premium tier. Use `/premium upgrade` for more information.",
                                     ephemeral=True
                                 )
+                        except Exception as e:
+                            logger.error(f"Error sending premium generic message: {e}")
                         return None
                     
                     # Access granted, continue with command

@@ -68,18 +68,22 @@ class PremiumExampleCog(commands.Cog):
     @app_commands.guild_only()
     async def feature_list(self, interaction: discord.Interaction):
         """List all premium features and their access status"""
+        # Get guild ID safely
+        guild_id = str(interaction.guild_id) if interaction.guild_id is not None else "0"
+        
         # Get feature access status
-        feature_status = await PremiumFeature.get_guild_feature_list(self.bot.db, interaction.guild_id)
+        feature_status = await PremiumFeature.get_guild_feature_list(self.bot.db, guild_id)
         
         # Create embed
+        guild_name = interaction.guild.name if interaction.guild else "Unknown Server"
         embed = discord.Embed(
             title="Premium Feature Access",
-            description=f"Feature access status for {interaction.guild.name}",
+            description=f"Feature access status for {guild_name}",
             color=discord.Color.blurple()
         )
         
         # Get current tier
-        tier = await PremiumFeature.get_guild_tier(self.bot.db, interaction.guild_id)
+        tier = await PremiumFeature.get_guild_tier(self.bot.db, guild_id)
         
         # Add tier information
         embed.add_field(

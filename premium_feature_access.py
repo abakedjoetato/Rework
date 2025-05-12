@@ -106,15 +106,21 @@ class PremiumFeature:
                         guild = await PremiumGuild.get_by_guild_id(db, str(guild_id))
                         has_access, error_message = await validate_premium_feature(db, guild, feature_name)
                         
-                        # If no access, send error message
-                        if has_access is None:
-                            if error_message is not None:
-                                try:
-                                    # Try to respond if interaction not responded to yet
+                        # If no access or error occurred, send error message
+                        if not has_access:
+                            # Ensure we have a message to show the user
+                            if error_message is None:
+                                error_message = f"This feature requires a premium subscription. Use `/premium info` to learn more."
+                                
+                            try:
+                                # Try to respond if interaction not responded to yet
+                                if not interaction.response.is_done():
                                     await interaction.response.send_message(error_message, ephemeral=True)
-                                except discord.errors.InteractionResponded:
+                                else:
                                     # Fallback if interaction already responded to
                                     await interaction.followup.send(error_message, ephemeral=True)
+                            except Exception as e:
+                                logger.error(f"Error sending premium access message: {e}")
                             return None
                         
                         # Access granted, continue with command
@@ -178,10 +184,19 @@ class PremiumFeature:
         try:
             guild = await PremiumGuild.get_by_guild_id(db, str_guild_id)
             if guild is not None:
-                has_access = guild.has_feature_access(feature_name)
-                # Update cache
-                _feature_check_cache[cache_key] = has_access
-                return has_access
+                try:
+                    # Safely call method with proper null checks
+                    if hasattr(guild, 'has_feature_access') and callable(guild.has_feature_access):
+                        has_access = guild.has_feature_access(feature_name)
+                        # Update cache
+                        _feature_check_cache[cache_key] = has_access
+                        return has_access
+                    else:
+                        logger.warning(f"PremiumGuild object missing has_feature_access method")
+                        return False
+                except Exception as method_error:
+                    logger.error(f"Error calling has_feature_access: {method_error}")
+                    return False
             
             # Guild not found, default to no access
             return False
@@ -213,10 +228,21 @@ class PremiumFeature:
         try:
             guild = await PremiumGuild.get_by_guild_id(db, str_guild_id)
             if guild is not None:
-                tier = guild.check_premium_status()
-                # Update cache
-                _guild_tier_cache[str_guild_id] = tier
-                return tier
+                try:
+                    # Safely call method with proper null checks
+                    if hasattr(guild, 'check_premium_status') and callable(guild.check_premium_status):
+                        tier = guild.check_premium_status()
+                        # Update cache
+                        _guild_tier_cache[str_guild_id] = tier
+                        return tier
+                    else:
+                        # If method doesn't exist, try to access premium_tier attribute directly
+                        tier = getattr(guild, 'premium_tier', 0)
+                        _guild_tier_cache[str_guild_id] = tier
+                        return tier
+                except Exception as method_error:
+                    logger.error(f"Error calling check_premium_status: {method_error}")
+                    return 0
             
             # Guild not found, default to free tier
             return 0
@@ -257,13 +283,33 @@ class PremiumFeature:
                 
             return result
         
-        # Get current tier and features
-        tier = guild.check_premium_status()
-        
-        # Collect all features from all tiers and mark them as accessible based on current tier
-        for check_tier in range(5):  # Tiers 0-4
-            for feature in get_tier_features(check_tier):
-                # A feature is accessible if its tier is less than or equal to the guild's tier
-                result[feature] = check_tier <= tier
+        # Get current tier and features with null safety
+        try:
+            # Safely get premium tier with proper null checks
+            if hasattr(guild, 'check_premium_status') and callable(guild.check_premium_status):
+                tier = guild.check_premium_status()
+            else:
+                # Fallback to direct attribute access
+                tier = getattr(guild, 'premium_tier', 0)
+                
+            # Collect all features from all tiers with error handling
+            for check_tier in range(5):  # Tiers 0-4
+                try:
+                    features = get_tier_features(check_tier)
+                    # Handle potential None return
+                    if features is None:
+                        continue
+                        
+                    for feature in features:
+                        # A feature is accessible if its tier is less than or equal to the guild's tier
+                        result[feature] = check_tier <= tier
+                except Exception as tier_error:
+                    logger.error(f"Error processing tier {check_tier} features: {tier_error}")
+                    continue
+        except Exception as e:
+            logger.error(f"Error determining guild premium status: {e}")
+            # Set all features to False as a fallback
+            for feature in result:
+                result[feature] = False
         
         return result

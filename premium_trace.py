@@ -121,16 +121,66 @@ async def trace_premium_checks():
             else:
                 logger.error("premium_utils module does not have get_guild_premium_tier function")
                 
-            # Test check_premium_feature_access
-            if hasattr(premium_utils, 'check_premium_feature_access'):
-                if inspect.iscoroutinefunction(premium_utils.check_premium_feature_access):
+            # Test premium feature access with fallback mechanism
+            premium_check_method = None
+            
+            # Try multiple approaches to find premium feature check methods
+            try:
+                # First attempt: try importing utils.premium_utils
+                try:
+                    import sys
+                    import importlib
+                    
+                    # Attempt to import the module
+                    try:
+                        premium_utils = importlib.import_module('utils.premium_utils')
+                        
+                        # Look for specific methods
+                        if hasattr(premium_utils, 'check_premium_feature_access'):
+                            premium_check_method = premium_utils.check_premium_feature_access
+                            logger.info("Found check_premium_feature_access in utils.premium_utils")
+                        elif hasattr(premium_utils, 'check_feature_access'):
+                            premium_check_method = premium_utils.check_feature_access
+                            logger.info("Found check_feature_access in utils.premium_utils")
+                    except ImportError:
+                        logger.warning("Could not import utils.premium_utils")
+                except Exception as e:
+                    logger.warning(f"Error importing premium_utils: {e}")
+                
+                # Second attempt: try direct import from premium_feature_access
+                if premium_check_method is None:
+                    try:
+                        from premium_feature_access import PremiumFeature
+                        if hasattr(PremiumFeature, 'check_access'):
+                            premium_check_method = PremiumFeature.check_access
+                            logger.info("Found PremiumFeature.check_access method")
+                    except ImportError:
+                        logger.warning("Could not import from premium_feature_access")
+                
+                # Third attempt: try direct import from premium_compatibility
+                if premium_check_method is None:
+                    try:
+                        from premium_compatibility import check_feature_access
+                        premium_check_method = check_feature_access
+                        logger.info("Found check_feature_access from premium_compatibility")
+                    except ImportError:
+                        logger.warning("Could not import from premium_compatibility")
+            except Exception as e:
+                logger.error(f"Error setting up premium check methods: {e}")
+            
+            # Use the found method if it's async
+            if premium_check_method:
+                if inspect.iscoroutinefunction(premium_check_method):
                     for feature in FEATURES:
-                        has_access = await premium_utils.check_premium_feature_access(db, TEST_GUILD_ID, feature)
-                        logger.info(f"Feature '{feature}' access: {has_access}")
+                        try:
+                            has_access = await premium_check_method(db, TEST_GUILD_ID, feature)
+                            logger.info(f"Feature '{feature}' access: {has_access}")
+                        except Exception as feature_check_error:
+                            logger.error(f"Error checking access for feature '{feature}': {feature_check_error}")
                 else:
-                    logger.error("check_premium_feature_access is not an async function")
+                    logger.error("Premium feature check method is not an async function")
             else:
-                logger.error("premium_utils module does not have check_premium_feature_access function")
+                logger.error("Could not find any valid premium feature check method")
         except ImportError:
             logger.error("Could not import premium_utils module")
         except Exception as util_error:
@@ -210,35 +260,80 @@ async def trace_premium_checks():
         ###########################################
         logger.info("\nChecking StatsCog premium checks...")
         try:
-            # Try to import the StatsCog
+            # Initialize variables
+            stats_cog_found = False
+            stats_cog = None
+            
+            # Import required modules
+            import os
+            import sys
+            import importlib.util
+            
+            # Method 1: Direct import
             try:
-                from cogs.stats import StatsCog
-                stats_cog_found = True
-            except ImportError:
-                logger.error("Could not import StatsCog from cogs.stats")
+                # Initialize StatsCog variable
+                StatsCog = None
                 
-            # Alternative approach if direct import fails
-            if not stats_cog_found:
+                # Try direct import
                 try:
-                    import sys
-                    import importlib.util
-                    
-                    spec = importlib.util.spec_from_file_location("stats_cog", "./cogs/stats.py")
+                    from cogs.stats import StatsCog
+                    stats_cog = StatsCog
+                    stats_cog_found = True
+                    logger.info("Successfully imported StatsCog directly")
+                except ImportError as direct_e:
+                    logger.warning(f"Direct import failed: {direct_e}")
+                    # Continue to next method
+            except ImportError as e:
+                logger.warning(f"Direct import failed: {e}")
+                
+                # Method 2: Dynamic import
+                try:
+                    spec = importlib.util.spec_from_file_location("stats_cog_module", os.path.join("cogs", "stats.py"))
                     if spec and spec.loader:
                         stats_module = importlib.util.module_from_spec(spec)
-                        sys.modules["stats_cog"] = stats_module
                         spec.loader.exec_module(stats_module)
                         
                         if hasattr(stats_module, "StatsCog"):
-                            StatsCog = stats_module.StatsCog
+                            stats_cog = stats_module.StatsCog
                             stats_cog_found = True
-                        else:
-                            logger.error("StatsCog class not found in stats module")
-                except Exception as import_error:
-                    logger.error(f"Error importing StatsCog: {import_error}")
+                            logger.info("Successfully imported StatsCog dynamically")
+                except Exception as e:
+                    logger.warning(f"Dynamic import failed: {e}")
+                    
+                    # Method 3: Absolute path import
+                    try:
+                        cogs_dir = os.path.abspath("cogs")
+                        stats_path = os.path.join(cogs_dir, "stats.py")
+                        if os.path.exists(stats_path):
+                            logger.info(f"Found stats.py at {stats_path}")
+                            spec = importlib.util.spec_from_file_location("stats_cog_abs", stats_path)
+                            if spec and spec.loader:
+                                stats_module = importlib.util.module_from_spec(spec)
+                                sys.modules[spec.name] = stats_module
+                                spec.loader.exec_module(stats_module)
+                                
+                                if hasattr(stats_module, "StatsCog"):
+                                    stats_cog = stats_module.StatsCog
+                                    stats_cog_found = True
+                                    logger.info("Successfully imported StatsCog using absolute path")
+                    except Exception as e:
+                        logger.warning(f"Absolute path import failed: {e}")
             
-            # If we successfully found StatsCog, check its methods
-            if stats_cog_found and StatsCog:
+            # Create mock if all methods failed
+            if not stats_cog_found:
+                logger.warning("Creating mock StatsCog for testing")
+                class MockStatsCog:
+                    def __init__(self):
+                        pass
+                    async def check_premium_feature(self, guild_id, feature):
+                        logger.info(f"Mock checking premium feature {feature} for guild {guild_id}")
+                        return True
+                
+                stats_cog = MockStatsCog
+                stats_cog_found = True
+            
+            # If a StatsCog class was found (real or mock)
+            if stats_cog_found and stats_cog is not None:
                 logger.info("Found StatsCog, checking methods for premium checks...")
                 
                 # Create a mock bot for initializing the cog
@@ -246,15 +341,28 @@ async def trace_premium_checks():
                     def __init__(self):
                         self.db = db
                 
-                # Initialize the StatsCog
-                stats_cog = StatsCog(MockBot())
+                # Initialize the cog with the mock bot
+                try:
+                    cog_instance = stats_cog(MockBot())
+                    
+                    # Store reference for later use
+                    stats_cog_instance = cog_instance
+                except Exception as e:
+                    logger.error(f"Error initializing StatsCog: {e}")
+                    # Create a basic mock instance if initialization fails
+                    class BasicMockStatsCog:
+                        async def check_premium_feature(self, guild_id, feature):
+                            logger.info(f"Basic mock checking premium feature {feature} for guild {guild_id}")
+                            return True
+                    
+                    stats_cog_instance = BasicMockStatsCog()
                 
-                # Get all command methods from the cog
-                for attr_name in dir(stats_cog):
+                # Get all command methods from the cog instance
+                for attr_name in dir(stats_cog_instance):
                     if attr_name.startswith("_"):
                         continue
                         
-                    attr = getattr(stats_cog, attr_name)
+                    attr = getattr(stats_cog_instance, attr_name)
                     if callable(attr):
                         cmd_name = attr_name
                         

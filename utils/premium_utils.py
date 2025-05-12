@@ -24,6 +24,50 @@ from utils.premium_feature_access import (
     PREMIUM_FEATURES
 )
 
+# Feature name mapping for UI display
+FEATURE_NAME_MAPPING = {
+    "stats": "Player Statistics",
+    "basic_commands": "Basic Commands",
+    "help": "Help Commands",
+    "info": "Server Information",
+    "setup": "Server Setup",
+    "player_search": "Player Search",
+    "basic_settings": "Basic Settings",
+    "leaderboard": "Leaderboards",
+    "scheduled_updates": "Scheduled Updates",
+    "weapon_stats": "Weapon Statistics",
+    "playtime_tracking": "Playtime Tracking",
+    "player_links": "Player Links",
+    "killfeed": "Kill Feed",
+    "multi_server": "Multi-Server Support",
+    "advanced_stats": "Advanced Statistics",
+    "rivalries": "Rivalries System",
+    "embeds": "Discord Embeds",
+    "data_export": "Data Export",
+    "custom_commands": "Custom Commands",
+    "admin_tools": "Admin Tools",
+    "bot_logs": "Bot Logs",
+    "premium_embeds": "Premium Embeds",
+    "custom_embeds": "Custom Embeds",
+    "events": "Events System",
+    "factions": "Factions System",
+    "bounties": "Bounties System",
+    "economy": "Economy System",
+    "custom_features": "Custom Features",
+    "dedicated_hosting": "Dedicated Hosting",
+    "custom_leaderboards": "Custom Leaderboards",
+    "priority_support": "Priority Support",
+    "white_label": "White Label Service",
+    "tier_0": "Free Tier Access",
+    "tier_1": "Basic Tier Access",
+    "tier_2": "Standard Tier Access",
+    "tier_3": "Premium Tier Access",
+    "tier_4": "Enterprise Tier Access",
+}
+
+# Feature tier requirements
+FEATURE_TIERS = PREMIUM_FEATURES
+
 async def normalize_feature_name(feature_name: str) -> str:
     """
     Normalize a feature name for consistent lookup.

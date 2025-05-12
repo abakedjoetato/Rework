@@ -209,6 +209,7 @@ async def trace_premium_checks():
         # PART 6: STATS COG PREMIUM CHECKS
         ###########################################
         logger.info("\nChecking StatsCog premium checks...")
+        stats_cog_found = False
         try:
             # Try to import the StatsCog
             try:
