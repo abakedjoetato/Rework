@@ -24,7 +24,7 @@ async def apply_stats_premium_fix():
         # Import our new premium utils
         from utils import premium_utils
         
-        # Add verify_premium method to StatsCog class
+        # Add verify_premium method to Stats class
         from cogs.stats import Stats
         
         # Define the verify_premium method

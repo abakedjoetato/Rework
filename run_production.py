@@ -37,7 +37,7 @@ startup_logger.setLevel(logging.INFO)
 try:
     with open("restart_log.txt", "a") as f:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        f.write(ff"\1")
+        f.write(f"[{timestamp}] Bot restarted in production mode\n")
 except Exception as e:
     logger.error(f"Failed to write to restart log: {e}")
 

@@ -17,7 +17,7 @@ def reduce_asyncssh_logging():
     
     # Check if the file already exists
     if os.path.exists(setup_file):
-        print(ff"\1")
+        print(f"Found existing logging setup file: {setup_file}")
         with open(setup_file, 'r', encoding='utf-8') as f:
             content = f.read()
     else:

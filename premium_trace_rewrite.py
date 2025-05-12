@@ -242,9 +242,9 @@ async def trace_premium_checks():
                     except (ImportError, ModuleNotFoundError):
                         # Another fallback
                         try:
-                            from cogs.stats_cog import Stats
+                            from cogs.stats import Stats
                             stats_cog_found = True
-                            logger.info("Successfully imported Stats cog from cogs.stats_cog")
+                            logger.info("Successfully imported Stats cog from cogs.stats")
                         except (ImportError, ModuleNotFoundError):
                             logger.error("Could not import Stats cog from any known location")
             except Exception as import_error:
@@ -260,14 +260,12 @@ async def trace_premium_checks():
                     # Try multiple possible file paths for Stats cog
                     potential_paths = [
                         "./cogs/stats.py",
-                        "./cogs/stats_premium_fix.py", 
-                        "./cogs/stats_cog.py",
+                        "./cogs/stats_premium_fix.py",
                         "cogs/stats.py",
                         "cogs/stats_premium_fix.py",
-                        "cogs/stats_cog.py",
+
                         os.path.join(os.getcwd(), "cogs/stats.py"),
-                        os.path.join(os.getcwd(), "cogs/stats_premium_fix.py"),
-                        os.path.join(os.getcwd(), "cogs/stats_cog.py")
+                        os.path.join(os.getcwd(), "cogs/stats_premium_fix.py")
                     ]
                     
                     for path in potential_paths:
@@ -367,9 +365,9 @@ async def trace_premium_checks():
                         except Exception as source_error:
                             logger.error(f"Error examining source of {cmd_name}: {source_error}")
             else:
-                logger.error("Could not find or initialize StatsCog")
+                logger.error("Could not find or initialize Stats cog")
         except Exception as stats_cog_error:
-            logger.error(f"Error examining StatsCog: {stats_cog_error}")
+            logger.error(f"Error examining Stats cog: {stats_cog_error}")
             traceback.print_exc()
         
     except Exception as outer_error:

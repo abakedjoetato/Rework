@@ -42,7 +42,7 @@ async def verify_all_premium_systems(guild_id: str) -> Tuple[bool, str]:
         }
         
         # PHASE 1: Verify direct database state
-        logger.info(ff"\1")
+        logger.info(f"PHASE 1: Verifying direct database state for guild {guild_id}")
         
         # Direct DB query
         db_doc = await db.guilds.find_one({"guild_id": str(guild_id)})

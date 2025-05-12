@@ -50,7 +50,7 @@ async def connect_to_mongodb():
         # Return database instance
         return db
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error connecting to MongoDB: {e}")
         return None
 from models.guild import Guild
 from models.server import Server

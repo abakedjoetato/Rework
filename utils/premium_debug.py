@@ -265,19 +265,19 @@ def patch_premium_functions():
         try:
             from cogs import stats
             
-            # Find the StatsCog class
+            # Find the Stats class
             for name, obj in inspect.getmembers(stats):
                 if inspect.isclass(obj) and hasattr(obj, "qualified_name") and obj.qualified_name == "stats":
-                    # Found StatsCog class
+                    # Found Stats class
                     stats_cog_class = obj
                     
                     # Patch verify_premium method if it exists
                     if hasattr(stats_cog_class, "verify_premium"):
                         original_method = stats_cog_class.verify_premium
                         stats_cog_class.verify_premium = trace_async_function(original_method)
-                        patched_functions.append("StatsCog.verify_premium")
+                        patched_functions.append("Stats.verify_premium")
                         
-                    logger.info(f"Patched cogs.stats.StatsCog methods")
+                    logger.info(f"Patched cogs.stats.Stats methods")
                     break
         except ImportError:
             logger.warning("Could not import cogs.stats module")
@@ -443,14 +443,14 @@ async def trace_feature_check(db, guild_id, feature_name, source="manual"):
         # Method 4: cogs.stats verification if applicable
         if feature_name in ["stats", "stats_server", "server", "stats_leaderboard", "leaderboard"]:
             try:
-                from cogs.stats import StatsCog
+                from cogs.stats import Stats
                 
                 # Create a mock bot
                 class MockBot:
                     def __init__(self):
                         self.db = db
                         
-                stats_cog = StatsCog(MockBot())
+                stats_cog = Stats(MockBot())
                 
                 # Map feature name to subcommand
                 subcommand = feature_name.replace("stats_", "")
@@ -460,14 +460,14 @@ async def trace_feature_check(db, guild_id, feature_name, source="manual"):
                 # Check verification
                 if hasattr(stats_cog, "verify_premium"):
                     access = await stats_cog.verify_premium(guild_id, subcommand)
-                    logger.info(f"MANUAL TRACE: StatsCog.verify_premium access for {subcommand or 'default'}: {access}")
+                    logger.info(f"MANUAL TRACE: Stats.verify_premium access for {subcommand or 'default'}: {access}")
                     
                     results["stats_cog"] = {
                         "subcommand": subcommand,
                         "access": access
                     }
                 else:
-                    logger.warning("MANUAL TRACE: StatsCog has no verify_premium method")
+                    logger.warning("MANUAL TRACE: Stats has no verify_premium method")
                     results["stats_cog"] = {"error": "No verify_premium method"}
             except Exception as e:
                 logger.error(f"MANUAL TRACE: Error in cogs.stats verification: {e}")

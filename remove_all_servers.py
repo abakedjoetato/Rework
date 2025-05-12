@@ -18,7 +18,7 @@ async def remove_all_servers():
     
     # Remove from game_servers collection
     result = await db.game_servers.delete_many({})
-    logger.info(ff"\1")
+    logger.info(f"Removed {result.deleted_count} servers from game_servers collection")
     
     # Remove from servers collection
     result = await db.servers.delete_many({})

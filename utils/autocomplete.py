@@ -30,7 +30,7 @@ async def server_id_autocomplete(interaction: discord.Interaction, current: str)
     try:
         db = await get_db()
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error connecting to database: {e}")
         return []
 
     # Get the guild ID

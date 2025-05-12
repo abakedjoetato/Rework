@@ -22,7 +22,7 @@ async def set_home_guild(guild_id):
         {"$set": {"key": "home_guild_id", "value": str(guild_id)}},
         upsert=True
     )
-    print(ff"\1")
+    print(f"Home guild ID {guild_id} set in database")
     
     # Also set in environment
     os.environ["HOME_GUILD_ID"] = str(guild_id)

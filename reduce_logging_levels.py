@@ -17,7 +17,7 @@ def reduce_log_levels(file_path):
     Args:
         file_path: Path to the file to modify
     """
-    print(ff"\1")
+    print(f"Reducing logging levels in {file_path}")
     
     try:
         with open(file_path, 'r', encoding='utf-8') as f:

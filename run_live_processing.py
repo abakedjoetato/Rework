@@ -31,7 +31,7 @@ async def main():
     try:
         # Wait for bot to be ready
         await bot.wait_until_ready()
-        logger.info(ff"\1")
+        logger.info(f"Bot is ready, starting live CSV processing")
         
         # Target channel ID - exactly what you specified
         # DO NOT CHANGE THIS ID

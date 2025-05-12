@@ -29,7 +29,7 @@ DALLE_API_URL = "https://api.openai.com/v1/images/generations"
 
 # Set up the headers for API requests
 headers = {
-    "Authorization": ff"\1",
+    "Authorization": f"Bearer {OPENAI_API_KEY}",
     "Content-Type": "application/json"
 }
 

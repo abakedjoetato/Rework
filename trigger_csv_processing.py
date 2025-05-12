@@ -88,7 +88,7 @@ async def main():
         
         logger.info("CSV processor test complete")
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error running CSV processor: {e}")
         import traceback
         logger.error(traceback.format_exc())
 

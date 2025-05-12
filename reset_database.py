@@ -43,7 +43,7 @@ async def reset_database():
     
     # Drop all collections
     for collection_name in collection_names:
-        logger.info(ff"\1")
+        logger.info(f"Dropping collection: {collection_name}")
         await db[collection_name].drop()
     
     logger.info("All collections dropped")

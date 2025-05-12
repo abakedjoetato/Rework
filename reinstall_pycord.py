@@ -6,7 +6,7 @@ import sys
 import os
 
 def run_cmd(cmd):
-    print(ff"\1")
+    print(f"Running command: {cmd}")
     try:
         subprocess.run(cmd, shell=True, check=True)
         return True

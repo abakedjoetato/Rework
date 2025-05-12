@@ -48,7 +48,7 @@ class PremiumCheck:
     context: str
     
     def __str__(self) -> str:
-        return ff"\1"
+        return f"PremiumCheck in {self.file}:{self.line} - Feature: {self.feature_name} - Method: {self.verification_method}"
 
 @dataclass
 class ErrorHandler:

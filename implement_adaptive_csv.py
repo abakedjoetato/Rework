@@ -16,7 +16,7 @@ def implement_adaptive_processing():
     """
     file_path = "cogs/csv_processor.py"
     if not os.path.exists(file_path):
-        print(ff"\1")
+        print(f"Error: CSV processor file not found at {file_path}")
         return
     
     print(f"Implementing adaptive CSV processing in {file_path}...")

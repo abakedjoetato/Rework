@@ -31,13 +31,13 @@ async def explore_directory(sftp, path, depth=0, max_depth=3):
         return
         
     try:
-        logger.info(ff"{\1}")
+        logger.info(f"Exploring directory: {path} (depth {depth})")
         entries = await sftp.listdir(path)
         
         # Check for CSV files
         csv_files = [entry for entry in entries if entry.lower().endswith('.csv')]
         if csv_files is not None:
-            logger.info(ff"\1")
+            logger.info(f"Found {len(csv_files)} CSV files in {path}:")
             for csv in csv_files[:5]:  # Show first 5
                 logger.info(f"{'  ' * depth}- {csv}")
             if len(csv_files) > 5:

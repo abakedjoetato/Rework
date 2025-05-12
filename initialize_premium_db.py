@@ -66,7 +66,7 @@ async def initialize_collections(db) -> Dict[str, bool]:
         return results
         
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error initializing collections: {e}")
         return {"error": str(e)}
 
 

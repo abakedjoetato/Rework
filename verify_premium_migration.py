@@ -53,7 +53,7 @@ def find_imports_in_file(file_path: str) -> Tuple[List[str], List[str]]:
                         module = line.split(" import ")[0][5:].strip()
                         from_imports.append(module)
     except Exception as e:
-        logger.error(ff"\1")
+        logger.error(f"Error parsing imports in {file_path}: {e}")
     
     return imports, from_imports
 

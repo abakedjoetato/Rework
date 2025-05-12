@@ -25,7 +25,7 @@ async def main():
     @client.event
     async def on_ready():
         """Called when the bot is ready"""
-        logger.info(ff"\1")
+        logger.info(f"Bot is ready as {client.user.name} ({client.user.id})")
         
         try:
             # Try using fetch_channel instead of get_channel for better channel lookup

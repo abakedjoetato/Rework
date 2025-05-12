@@ -25,7 +25,7 @@ def clear_python_cache():
         for dir_name in dirs:
             if dir_name == "__pycache__":
                 cache_dir = os.path.join(root, dir_name)
-                print(ff"\1")
+                print(f"Removing cache directory: {cache_dir}")
                 try:
                     shutil.rmtree(cache_dir)
                     count += 1

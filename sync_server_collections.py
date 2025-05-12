@@ -38,12 +38,12 @@ async def sync_server_collections(server_id=None):
         return False
     
     try:
-        logger.info(ff"\1")
+        logger.info(f"Synchronizing server collections{f' for server {server_id}' if server_id else ' for all servers'}")
         
         # Call the database method to synchronize server data
         result = await db.synchronize_server_data(server_id)
         
-        if result is not None is not None:
+        if result is not None:
             logger.info("Server data synchronization completed successfully")
         else:
             logger.error("Server data synchronization failed")

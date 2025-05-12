@@ -90,7 +90,7 @@ def fix_affected_files(files: List[str]) -> int:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             fixed_count += 1
-            logger.info(ff"\1")
+            logger.info(f"Fixed imports in {file_path}")
     
     return fixed_count
                 

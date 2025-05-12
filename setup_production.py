@@ -26,7 +26,7 @@ def check_python_version():
     """Check Python version is at least 3.8"""
     major, minor = sys.version_info[:2]
     if major < 3 or (major == 3 and minor < 8):
-        logger.critical(ff"\1")
+        logger.critical(f"Python version {major}.{minor} is not supported. Minimum required version is 3.8.")
         return False
     logger.info(f"Python version {major}.{minor} OK")
     return True

@@ -33,7 +33,7 @@ def main():
                 # We created .replit.new as a template but can't modify .replit directly
                 logger.info("Using alternative launch method")
     except Exception as e:
-        logger.warning(ff"\1")
+        logger.warning(f"Could not check .replit file: {e}")
     
     # Print a banner
     print("=" * 60)

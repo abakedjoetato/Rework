@@ -32,7 +32,7 @@ async def run_historical_parse():
     server_id = "5251382d-8bce-4abd-8bcb-cdef73698a46"
     days = 30
     
-    logger.info(ff"\1")
+    logger.info(f"Starting historical parse for server_id {server_id} for the last {days} days")
     start_time = datetime.now()
     
     try:
