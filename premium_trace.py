@@ -39,7 +39,6 @@ async def trace_premium_checks():
     db = None
     stats_cog = None
     stats_cog_found = False
-    StatsCog = None
     guild_doc = None
     
     try:
@@ -258,7 +257,7 @@ async def trace_premium_checks():
         ###########################################
         # PART 6: STATS COG PREMIUM CHECKS
         ###########################################
-        logger.info("\nChecking StatsCog premium checks...")
+        logger.info("\nChecking Stats cog premium checks...")
         try:
             # Initialize variables
             stats_cog_found = False
@@ -271,15 +270,15 @@ async def trace_premium_checks():
             
             # Method 1: Direct import
             try:
-                # Initialize StatsCog variable
-                StatsCog = None
+                # Initialize Stats variable for the cog class
+                stats_cog_class = None
                 
                 # Try direct import
                 try:
-                    from cogs.stats import StatsCog
-                    stats_cog = StatsCog
+                    from cogs.stats import Stats
+                    stats_cog = Stats
                     stats_cog_found = True
-                    logger.info("Successfully imported StatsCog directly")
+                    logger.info("Successfully imported Stats cog directly")
                 except ImportError as direct_e:
                     logger.warning(f"Direct import failed: {direct_e}")
                     # Continue to next method
@@ -293,10 +292,10 @@ async def trace_premium_checks():
                         stats_module = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(stats_module)
                         
-                        if hasattr(stats_module, "StatsCog"):
-                            stats_cog = stats_module.StatsCog
+                        if hasattr(stats_module, "Stats"):
+                            stats_cog = stats_module.Stats
                             stats_cog_found = True
-                            logger.info("Successfully imported StatsCog dynamically")
+                            logger.info("Successfully imported Stats cog dynamically")
                 except Exception as e:
                     logger.warning(f"Dynamic import failed: {e}")
                     
@@ -312,29 +311,29 @@ async def trace_premium_checks():
                                 sys.modules[spec.name] = stats_module
                                 spec.loader.exec_module(stats_module)
                                 
-                                if hasattr(stats_module, "StatsCog"):
-                                    stats_cog = stats_module.StatsCog
+                                if hasattr(stats_module, "Stats"):
+                                    stats_cog = stats_module.Stats
                                     stats_cog_found = True
-                                    logger.info("Successfully imported StatsCog using absolute path")
+                                    logger.info("Successfully imported Stats cog using absolute path")
                     except Exception as e:
                         logger.warning(f"Absolute path import failed: {e}")
             
             # Create mock if all methods failed
             if not stats_cog_found:
-                logger.warning("Creating mock StatsCog for testing")
-                class MockStatsCog:
+                logger.warning("Creating mock Stats cog for testing")
+                class MockStats:
                     def __init__(self):
                         pass
                     async def check_premium_feature(self, guild_id, feature):
                         logger.info(f"Mock checking premium feature {feature} for guild {guild_id}")
                         return True
                 
-                stats_cog = MockStatsCog
+                stats_cog = MockStats
                 stats_cog_found = True
             
-            # If a StatsCog class was found (real or mock)
+            # If a Stats cog class was found (real or mock)
             if stats_cog_found and stats_cog is not None:
-                logger.info("Found StatsCog, checking methods for premium checks...")
+                logger.info("Found Stats cog, checking methods for premium checks...")
                 
                 # Create a mock bot for initializing the cog
                 class MockBot:
@@ -343,19 +342,21 @@ async def trace_premium_checks():
                 
                 # Initialize the cog with the mock bot
                 try:
-                    cog_instance = stats_cog(MockBot())
+                    # Create instance using proper constructor pattern
+                    mock_bot = MockBot()
+                    cog_instance = stats_cog(mock_bot)
                     
                     # Store reference for later use
                     stats_cog_instance = cog_instance
                 except Exception as e:
-                    logger.error(f"Error initializing StatsCog: {e}")
+                    logger.error(f"Error initializing Stats cog: {e}")
                     # Create a basic mock instance if initialization fails
-                    class BasicMockStatsCog:
+                    class BasicMockStats:
                         async def check_premium_feature(self, guild_id, feature):
                             logger.info(f"Basic mock checking premium feature {feature} for guild {guild_id}")
                             return True
                     
-                    stats_cog_instance = BasicMockStatsCog()
+                    stats_cog_instance = BasicMockStats()
                 
                 # Get all command methods from the cog instance
                 for attr_name in dir(stats_cog_instance):
@@ -384,9 +385,9 @@ async def trace_premium_checks():
                         except Exception as source_error:
                             logger.error(f"Error examining source of {cmd_name}: {source_error}")
             else:
-                logger.error("Could not find or initialize StatsCog")
+                logger.error("Could not find or initialize Stats cog")
         except Exception as stats_cog_error:
-            logger.error(f"Error examining StatsCog: {stats_cog_error}")
+            logger.error(f"Error examining Stats cog: {stats_cog_error}")
             traceback.print_exc()
         
     except Exception as outer_error:

@@ -39,7 +39,7 @@ async def trace_premium_checks():
     db = None
     stats_cog = None
     stats_cog_found = False
-    StatsCog = None
+    Stats = None
     guild_doc = None
     
     try:
@@ -223,32 +223,32 @@ async def trace_premium_checks():
         ###########################################
         # PART 6: STATS COG PREMIUM CHECKS
         ###########################################
-        logger.info("\nChecking StatsCog premium checks...")
+        logger.info("\nChecking Stats cog premium checks...")
         stats_cog_found = False
         try:
-            # Try to import the StatsCog
+            # Try to import the Stats cog
             try:
                 # Using a try/except block for each import attempt
                 try:
-                    from cogs.stats import StatsCog
+                    from cogs.stats import Stats
                     stats_cog_found = True
-                    logger.info("Successfully imported StatsCog from cogs.stats")
+                    logger.info("Successfully imported Stats cog from cogs.stats")
                 except (ImportError, ModuleNotFoundError):
                     # Try alternative import paths
                     try:
-                        from cogs.stats_premium_fix import StatsCog
+                        from cogs.stats_premium_fix import Stats
                         stats_cog_found = True
-                        logger.info("Successfully imported StatsCog from cogs.stats_premium_fix")
+                        logger.info("Successfully imported Stats cog from cogs.stats_premium_fix")
                     except (ImportError, ModuleNotFoundError):
                         # Another fallback
                         try:
-                            from cogs.stats_cog import StatsCog
+                            from cogs.stats_cog import Stats
                             stats_cog_found = True
-                            logger.info("Successfully imported StatsCog from cogs.stats_cog")
+                            logger.info("Successfully imported Stats cog from cogs.stats_cog")
                         except (ImportError, ModuleNotFoundError):
-                            logger.error("Could not import StatsCog from any known location")
+                            logger.error("Could not import Stats cog from any known location")
             except Exception as import_error:
-                logger.error(f"Unexpected error importing StatsCog: {import_error}")
+                logger.error(f"Unexpected error importing Stats cog: {import_error}")
                 
             # Alternative approach if direct import fails
             if not stats_cog_found:
@@ -257,7 +257,7 @@ async def trace_premium_checks():
                     import importlib.util
                     import os
                     
-                    # Try multiple possible file paths for StatsCog
+                    # Try multiple possible file paths for Stats cog
                     potential_paths = [
                         "./cogs/stats.py",
                         "./cogs/stats_premium_fix.py", 
@@ -285,28 +285,28 @@ async def trace_premium_checks():
                                 sys.modules[module_name] = stats_module
                                 spec.loader.exec_module(stats_module)
                                 
-                                if hasattr(stats_module, "StatsCog"):
-                                    StatsCog = stats_module.StatsCog
+                                if hasattr(stats_module, "Stats"):
+                                    Stats = stats_module.Stats
                                     stats_cog_found = True
-                                    logger.info(f"Successfully loaded StatsCog from {path}")
+                                    logger.info(f"Successfully loaded Stats cog from {path}")
                                     break
                                 else:
-                                    logger.debug(f"Module {module_name} does not have StatsCog class")
+                                    logger.debug(f"Module {module_name} does not have Stats class")
                             else:
                                 logger.debug(f"Could not find spec for {path}")
                         except Exception as module_error:
                             logger.debug(f"Error loading module {path}: {module_error}")
                     
                     if not stats_cog_found:
-                        logger.error("Could not load StatsCog from any location")
+                        logger.error("Could not load Stats cog from any location")
                 except Exception as import_error:
-                    logger.error(f"Error importing StatsCog: {import_error}")
+                    logger.error(f"Error importing Stats cog: {import_error}")
                     
                 # If still not found, create a minimal test class
                 if not stats_cog_found:
-                    logger.info("Creating minimal StatsCog for testing")
-                    class StatsCog:
-                        """Minimal implementation of StatsCog for testing"""
+                    logger.info("Creating minimal Stats cog for testing")
+                    class Stats:
+                        """Minimal implementation of Stats cog for testing"""
                         def __init__(self, bot=None):
                             self.bot = bot
                             self.premium_features = {
@@ -326,19 +326,19 @@ async def trace_premium_checks():
                             return 2
                     
                     stats_cog_found = True
-                    logger.info("Created minimal StatsCog for testing")
+                    logger.info("Created minimal Stats cog for testing")
             
-            # If we successfully found StatsCog, check its methods
-            if stats_cog_found and StatsCog:
-                logger.info("Found StatsCog, checking methods for premium checks...")
+            # If we successfully found Stats, check its methods
+            if stats_cog_found and Stats:
+                logger.info("Found Stats cog, checking methods for premium checks...")
                 
                 # Create a mock bot for initializing the cog
                 class MockBot:
                     def __init__(self):
                         self.db = db
                 
-                # Initialize the StatsCog
-                stats_cog = StatsCog(MockBot())
+                # Initialize the Stats cog
+                stats_cog = Stats(MockBot())
                 
                 # Get all command methods from the cog
                 for attr_name in dir(stats_cog):

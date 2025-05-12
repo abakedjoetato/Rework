@@ -34,9 +34,14 @@ class Economy(BaseModel):
         lifetime_spent: int = 0,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
+        db=None,
+        data=None,
         **kwargs
     ):
-        self._id = None
+        # Initialize the base class
+        super().__init__(db=db, data=data or {})
+        
+        # Set specific attributes
         self.player_id = player_id
         self.discord_id = discord_id
         self.server_id = server_id
@@ -64,7 +69,7 @@ class Economy(BaseModel):
             Economy object or None if found is None
         """
         document = await db.economy.find_one({"player_id": player_id})
-        return cls.from_document(document) if document is not None is not None else None
+        return cls.from_document(document, db=db) if document is not None else None
     
     @classmethod
     async def get_by_discord_id(cls, db, discord_id: str) -> Optional['Economy']:
@@ -78,9 +83,9 @@ class Economy(BaseModel):
             Economy object or None if found is None
         """
         document = await db.economy.find_one({"discord_id": discord_id})
-        return cls.from_document(document) if document is not None else None
+        return cls.from_document(document, db=db) if document is not None else None
     
-    async def add_balance(self, db, amount: int, transaction_type: str, description: str = None) -> bool:
+    async def add_balance(self, db, amount: int, transaction_type: str, description: Optional[str] = "") -> bool:
         """Add balance to player account
         
         Args:
@@ -129,7 +134,7 @@ class Economy(BaseModel):
         
         return result.modified_count > 0
     
-    async def subtract_balance(self, db, amount: int, transaction_type: str, description: str = None) -> bool:
+    async def subtract_balance(self, db, amount: int, transaction_type: str, description: Optional[str] = "") -> bool:
         """Subtract balance from player account
         
         Args:
@@ -179,7 +184,7 @@ class Economy(BaseModel):
         return result.modified_count > 0
     
     @classmethod
-    async def get_or_create(cls, db, player_id: str, discord_id: str = None, server_id: str = None) -> 'Economy':
+    async def get_or_create(cls, db, player_id: str, discord_id: Optional[str] = None, server_id: Optional[str] = None) -> 'Economy':
         """Get or create economy data for a player
         
         Args:
@@ -225,7 +230,7 @@ class Economy(BaseModel):
         return economy
     
     @classmethod
-    async def get_top_players(cls, db, server_id: str = None, limit: int = 10) -> List['Economy']:
+    async def get_top_players(cls, db, server_id: Optional[str] = None, limit: int = 10) -> List['Economy']:
         """Get top players by balance
         
         Args:

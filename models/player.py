@@ -235,8 +235,8 @@ class Player(BaseModel):
                 query["server_id"] = server_id
 
             document = await db.players.find_one(query)
-            if document is not None is not None:
-                return cls.from_document(document)
+            if document is not None:
+                return cls.from_document(document, db=db)
             return None
         except Exception as e:
             logger.error(f"Error in get_by_player_id: {e}", exc_info=True)
