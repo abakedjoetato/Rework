@@ -27,20 +27,23 @@ class BaseModel:
         self.data = data or {}
     
     @classmethod
-    def from_document(cls: Type[T], document: Dict[str, Any]) -> Optional[T]:
+    def from_document(cls: Type[T], document: Dict[str, Any], db=None) -> Optional[T]:
         """Create a model instance from a MongoDB document
         
         Args:
             document: MongoDB document
+            db: Optional database connection
             
         Returns:
-            Model instance or None if document is not None is None
+            Model instance or None if document is None
         """
         if document is None:
             return None
             
-        instance = cls()
+        # Create instance with db and data
+        instance = cls(db=db, data=document.copy())
         
+        # Also set attributes for backward compatibility
         for key, value in document.items():
             # Convert MongoDB _id to id if needed
             if key == '_id':

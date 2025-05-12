@@ -114,7 +114,7 @@ class Rivalry(BaseModel):
             })
 
         if rivalry_data is not None:
-            return cls(db, rivalry_data)
+            return cls.from_document(rivalry_data, db=db)
         return None
 
     @classmethod

@@ -35,8 +35,13 @@ class Player(BaseModel):
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
         known_aliases: Optional[List[str]] = None,
+        db=None,
+        data=None,
         **kwargs
     ):
+        # Initialize the base class
+        super().__init__(db=db, data=data or {})
+        
         # Ensure player_id and server_id are properly sanitized to prevent errors
         # CRITICAL FIX: Defensive handling of player_id and server_id
         if player_id is None or player_id == "":
@@ -458,12 +463,13 @@ class Player(BaseModel):
 
     @classmethod
     def from_document(
-        cls, document: Optional[Dict[str, Any]]
+        cls, document: Optional[Dict[str, Any]], db=None
     ) -> Optional["Player"]:
         """Create a Player instance from a document safely with enhanced validation
 
         Args:
             document: Database document to convert
+            db: Optional database connection
 
         Returns:
             Player instance or None if document is invalid
@@ -536,6 +542,7 @@ class Player(BaseModel):
 
             # Create Player instance with validated data
             player = cls(
+                db=db,
                 player_id=doc["player_id"],
                 server_id=doc["server_id"],
                 name=doc["name"],
@@ -579,6 +586,7 @@ class Player(BaseModel):
             # Last resort emergency recovery
             try:
                 emergency_player = cls(
+                    db=db,
                     player_id=doc["player_id"],
                     server_id=doc["server_id"],
                     name=doc["name"],
