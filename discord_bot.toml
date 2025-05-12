@@ -1,0 +1,3 @@
+[run]
+command = "python run_discord_on_replit.py"
+template = "python"

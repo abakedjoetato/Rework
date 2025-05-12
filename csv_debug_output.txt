@@ -1,0 +1,11 @@
+2025-05-10 20:24:52,650 - asyncio - DEBUG - Using selector: EpollSelector
+2025-05-10 20:24:52,651 - csv_debug - INFO - ================================================================================
+2025-05-10 20:24:52,652 - csv_debug - INFO - STARTING CSV DIAGNOSTICS FOR SERVER 2143443
+2025-05-10 20:24:52,653 - csv_debug - INFO - ================================================================================
+2025-05-10 20:24:52,654 - csv_debug - INFO - 
+## STEP 1: TESTING SFTP CONNECTION
+2025-05-10 20:24:52,654 - utils.sftp - INFO - SFTPClient using original server ID '1' for path construction instead of '2143443'
+2025-05-10 20:24:52,714 - utils.sftp - DEBUG - Memory before SFTP connection: 57.39MB
+2025-05-10 20:24:52,981 - utils.sftp - INFO - Connecting to SFTP server: 208.103.169.139:22 (attempt 1)
+2025-05-10 20:24:52,994 - asyncssh - INFO - Host canonicalization disabled
+2025-05-10 20:24:52,994 - asyncssh - INFO - Opening SSH connection to 208.103.169.139, port 22
