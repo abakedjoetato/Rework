@@ -88,7 +88,7 @@ class Server(BaseModel):
             Server object or None if found is None
         """
         document = await db.game_servers.find_one({"server_id": server_id})
-        return cls.from_document(document) if document is not None is not None else None
+        return cls.from_document(document) if document is not None else None
 
     async def save(self, db) -> bool:
         """Save server to database
@@ -141,7 +141,7 @@ class Server(BaseModel):
 
             # If successful, also update the server in the 'servers' collection for the CSV processor
             # This ensures both collections have the correct SFTP data
-            if success is not None:
+            if success:
                 # Also update/insert in the servers collection which is used by CSV processor
                 servers_result = await db.servers.update_one(
                     {"server_id": self.server_id},
@@ -262,7 +262,7 @@ class Server(BaseModel):
                             if server.get("server_id") and any(char.isdigit() for char in server.get("server_id", "")):
                                 # Extract numeric part of server ID as fallback for original ID
                                 numeric_parts = ''.join(filter(str.isdigit, server.get("server_id", "")))
-                                if numeric_parts is not None:
+                                if numeric_parts:
                                     original_server_id = numeric_parts
                                     logger.info(f"Extracted fallback original_server_id {original_server_id} from server_id {server.get('server_id')}")
 

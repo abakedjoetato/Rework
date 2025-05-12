@@ -39,7 +39,7 @@ async def example_find_one(db, user_id: str) -> Optional[Dict[str, Any]]:
     # Always check for success
     if result.success is None:
         # Log the error
-        logger.error(ff"\1")
+        logger.error(f"Error updating document: {str(e)}")
         return None
     
     # The result is a SafeDocument

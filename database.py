@@ -5,7 +5,8 @@ Handles all database-related functions for the Discord bot.
 import os
 import logging
 import pymongo
-from pymongo.get_error()s import ConnectionFailure, ConfigurationError
+import datetime
+from pymongo.errors import ConnectionFailure, ConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def init_db():
     
     try:
         # Connect to MongoDB
-        logger.info(f"Connecting to MongoDB: {self.uri}")
+        logger.info(f"Connecting to MongoDB: {mongo_uri}")
         client = pymongo.MongoClient(mongo_uri)
         
         # Verify connection
@@ -104,7 +105,7 @@ def set_pixel(canvas_id, x, y, color, user_id):
         {"$set": {
             "color": color,
             "last_modified_by": user_id,
-            "last_modified": pymongo.datetime.datetime.utcnow()
+            "last_modified": datetime.datetime.utcnow()
         }},
         upsert=True
     )
@@ -124,7 +125,7 @@ def get_user_stats(user_id):
     
     user = db.users.find_one({"user_id": user_id})
     
-    if user is not None is None:
+    if user is None:
         user = {
             "user_id": user_id,
             "pixels_placed": 0

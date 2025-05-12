@@ -27,7 +27,7 @@ async def migrate_guild_premium_data(db, guild_id: str) -> Tuple[bool, str]:
         old_guild_doc = await db.guilds.find_one({"guild_id": guild_id})
         
         if old_guild_doc is None:
-            return False, ff"\1"
+            return False, f"Guild {guild_id} not found in database"
             
         # Extract premium tier with safe conversion
         premium_tier = 0
@@ -133,7 +133,7 @@ async def migrate_guild_premium_data(db, guild_id: str) -> Tuple[bool, str]:
         
     except Exception as e:
         logger.error(f"Error migrating guild {guild_id}: {e}")
-        return False, ff"\1"
+        return False, f"Error migrating guild {guild_id}: {e}"
 
 
 async def migrate_server_data(db, server_data: Dict, guild_id: str) -> bool:

@@ -24,7 +24,7 @@ for item in os.listdir(source_dir):
     
     # If it's a directory, move its contents
     if os.path.isdir(source_item):
-        print(ff"\1")
+        print(f"Extracting files from {zip_file} to {target_dir}")
         for subitem in os.listdir(source_item):
             source_subitem = os.path.join(source_item, subitem)
             target_subitem = os.path.join(target_dir, subitem)

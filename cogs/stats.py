@@ -382,10 +382,10 @@ class Stats(commands.Cog):
             for s in guild.servers:
                 if s.server_id == server_id:
                     server = s
-                    server_name = s.server_name or server_id
+                    server_name = s.name or server_id
                     break
 
-            if server is not None is None:
+            if server is None:
                 embed = await EmbedBuilder.create_error_embed(
                     "Server Not Found",
                     f"Server with ID {server_id} not found in this guild."
