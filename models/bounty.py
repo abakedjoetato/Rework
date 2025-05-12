@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Bounty(BaseModel):
     """Player bounty data"""
-    collection_name: ClassVar[str] = "bounties"
+    collection_name = "bounties"  # Using regular class variable to match parent class
     
     # Bounty status constants
     STATUS_ACTIVE = "active"

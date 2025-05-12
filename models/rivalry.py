@@ -3,7 +3,7 @@ Rivalry model for tracking player-vs-player relationships
 """
 import logging
 from typing import Dict, Any, List, Optional, Union, cast
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models.base_model import BaseModel
 
@@ -38,7 +38,7 @@ class Rivalry(BaseModel):
         # Ensure guild_id is stored as a string
         if "guild_id" in data:
             data["guild_id"] = str(data["guild_id"])
-
+            
         # Initialize default values
         now = datetime.utcnow()
 
@@ -63,15 +63,19 @@ class Rivalry(BaseModel):
         for key, value in defaults.items():
             if key not in data:
                 data[key] = value
+                
+        # Create the instance with db and data
+        rivalry = cls(db=db, data=data)
 
         # Create the rivalry in the database
         try:
             result = await db[cls.collection_name].insert_one(data)
             data["_id"] = result.inserted_id
+            rivalry.data = data  # Update instance with the latest data including _id
             logger.info(f"Created rivalry between {data['player1_id']} and {data['player2_id']} (guild={data['guild_id']})")
-            return cls(db, data)
+            return rivalry
         except Exception as e:
-            logger.error(f"Failed to create rivalry: {e}f")
+            logger.error(f"Failed to create rivalry: {e}")
             raise
 
     @classmethod

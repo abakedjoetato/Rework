@@ -228,6 +228,21 @@ async def check_guild_feature_access(db, guild_id: Union[str, int], feature_name
     
     return result
 
+# Legacy function name for compatibility with premium_trace.py and premium_trace_rewrite.py
+async def check_premium_feature_access(db, guild_id: Union[str, int], feature_name: str) -> bool:
+    """Compatibility function for backward compatibility with premium_trace scripts.
+    Just calls verify_premium_for_feature.
+    
+    Args:
+        db: Database connection
+        guild_id: Guild ID
+        feature_name: Feature to check access for
+        
+    Returns:
+        True if guild has access to the feature, False otherwise
+    """
+    return await verify_premium_for_feature(db, guild_id, feature_name)
+
 async def log_premium_access_attempt(
     db,
     guild_id: Union[str, int],

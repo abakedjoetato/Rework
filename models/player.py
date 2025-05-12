@@ -3,8 +3,9 @@
 Player model represents a player in the game with statistics and relationships
 """
 import logging
+import asyncio
 from typing import Dict, Any, List, Optional, Union, Set, cast
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 import re
 import uuid
@@ -680,22 +681,46 @@ class Player(BaseModel):
                 logger.debug(f"Updating existing player: {safe_player_id}")
 
                 # Build update data with safely converted values
-                update_data = {"updated_at": now, "last_seen": now}
+                # Use explicitly typed Dict[str, Any] to allow mixed types (strings, datetime, etc.)
+                update_data: Dict[str, Any] = {
+                    "updated_at": now,
+                    "last_seen": now
+                }
 
+                # Add name if available
                 if safe_name is not None:
-                    update_data["name"] = safe_name
+                    update_data["name"] = safe_name  # String type
 
                 # Process kwargs with validation
                 for key, value in kwargs.items():
                     # Skip None values to avoid overwriting with None
                     if value is not None:
-                        update_data[key] = value
+                        # Handle date fields that might come as strings
+                        if key in ["created_at", "updated_at", "last_seen"]:
+                            if isinstance(value, str):
+                                try:
+                                    # Try to parse the string as a datetime
+                                    update_data[key] = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                                except (ValueError, TypeError):
+                                    logger.warning(f"Could not convert string to datetime for {key}: {value}")
+                                    # Skip this field rather than setting an invalid value
+                                    continue
+                            elif isinstance(value, datetime):
+                                update_data[key] = value
+                            else:
+                                logger.warning(f"Invalid type for datetime field {key}: {type(value)}")
+                                continue
+                        else:
+                            update_data[key] = value
 
                 # Single atomic update with addToSet for aliases
-                update_ops = {
+                update_ops: Dict[str, Any] = {
                     "$set": update_data,
-                    "$addToSet": {"known_aliases": safe_name} if safe_name else {},
                 }
+                
+                # Only add the $addToSet operation if we have a valid name to add
+                if safe_name:
+                    update_ops["$addToSet"] = {"known_aliases": safe_name}
 
                 # Execute update with retry logic
                 retry_count = 0
@@ -849,9 +874,12 @@ class Player(BaseModel):
         """Detailed string representation"""
         return f"Player(id={self.player_id}, name={self.name}, server={self.server_id}, k={self.kills}, d={self.deaths})"
         
-    async def get_detailed_stats(self) -> Dict[str, Any]:
+    async def get_detailed_stats(self, db=None) -> Dict[str, Any]:
         """Get detailed player statistics, including nemesis and prey relationships
         
+        Args:
+            db: Optional database connection (if not provided, will use self.db if available)
+            
         Returns:
             Dict containing player statistics
         """
@@ -863,25 +891,37 @@ class Player(BaseModel):
             "kills": self.kills,
             "deaths": self.deaths,
             "suicides": self.suicides,
-            "headshots": self.headshots,
+            "headshots": getattr(self, "headshots", 0),
             "kdr": self.kd_ratio,
-            "longest_shot": self.longest_shot,
+            "longest_shot": getattr(self, "longest_shot", 0),
             "highest_killstreak": getattr(self, "highest_killstreak", 0),
             "current_killstreak": getattr(self, "current_killstreak", 0),
             "last_seen": self.last_seen,
-            "active": self.active,
+            "active": getattr(self, "active", False),
             "ranks": getattr(self, "ranks", {}),
             "average_lifetime": getattr(self, "average_lifetime", 0),
             "weapons": getattr(self, "weapons", {})
         }
         
+        # Get the database connection
+        database = db
+        if database is None:
+            database = getattr(self, "db", None)
+            
+        # Skip rivalry lookups if no database connection is available
+        if database is None:
+            logger.warning("No database connection available for getting rivalries")
+            stats["nemesis"] = None
+            stats["prey"] = None
+            return stats
+            
         # Get nemesis and prey relationships if available
         try:
             # Import here to avoid circular imports
             from models.rivalry import Rivalry
             
             # Get player's rivalries
-            rivalries = await Rivalry.get_for_player(self.db, self.player_id, None, self.server_id)
+            rivalries = await Rivalry.get_for_player(database, self.player_id, None, self.server_id)
             
             # Initialize nemesis and prey data
             nemesis_data = None

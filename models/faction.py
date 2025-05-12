@@ -83,7 +83,7 @@ class Faction:
             faction_id: Faction document ID
             
         Returns:
-            Faction or None: Faction if found is not None
+            Faction or None: Faction if found
         """
         db = await get_db()
         faction_data = await db.collections["factions"].find_one({"_id": faction_id})
@@ -95,71 +95,95 @@ class Faction:
     
     @classmethod
     @AsyncCache.cached(ttl=60)
-    async def get_by_name(cls, server_id: str, faction_name: str) -> Optional['Faction']:
+    async def get_by_name(cls, server_id: Optional[str], faction_name: str) -> Optional['Faction']:
         """Get faction by name
         
         Args:
-            server_id: Server ID
+            server_id: Server ID, can be None
             faction_name: Faction name
             
         Returns:
-            Faction or None: Faction if found is not None
+            Faction or None: Faction if found
         """
-        db = await get_db()
-        faction_data = await db.collections["factions"].find_one({
-            "server_id": server_id,
-            "faction_name": faction_name
-        })
-        
-        if faction_data is None:
+        if server_id is None:
+            logger.warning("Attempted to get faction by name with None server_id")
             return None
-        
-        return cls(faction_data)
+            
+        try:
+            db = await get_db()
+            faction_data = await db.collections["factions"].find_one({
+                "server_id": server_id,
+                "faction_name": faction_name
+            })
+            
+            if faction_data is None:
+                return None
+            
+            return cls(faction_data)
+        except Exception as e:
+            logger.error(f"Error getting faction by name: {e}")
+            return None
     
     @classmethod
     @AsyncCache.cached(ttl=60)
-    async def get_by_tag(cls, server_id: str, faction_tag: str) -> Optional['Faction']:
+    async def get_by_tag(cls, server_id: Optional[str], faction_tag: str) -> Optional['Faction']:
         """Get faction by tag
         
         Args:
-            server_id: Server ID
+            server_id: Server ID, can be None
             faction_tag: Faction tag
             
         Returns:
-            Faction or None: Faction if found is not None
+            Faction or None: Faction if found
         """
-        db = await get_db()
-        faction_data = await db.collections["factions"].find_one({
-            "server_id": server_id,
-            "faction_tag": faction_tag
-        })
-        
-        if faction_data is None:
+        if server_id is None:
+            logger.warning("Attempted to get faction by tag with None server_id")
             return None
-        
-        return cls(faction_data)
+            
+        try:
+            db = await get_db()
+            faction_data = await db.collections["factions"].find_one({
+                "server_id": server_id,
+                "faction_tag": faction_tag
+            })
+            
+            if faction_data is None:
+                return None
+            
+            return cls(faction_data)
+        except Exception as e:
+            logger.error(f"Error getting faction by tag: {e}")
+            return None
     
     @classmethod
-    async def get_for_player(cls, server_id: str, player_id: str) -> Optional['Faction']:
+    async def get_for_player(cls, server_id: Optional[str], player_id: str) -> Optional['Faction']:
         """Get faction for a player
         
         Args:
-            server_id: Server ID
+            server_id: Server ID, can be None
             player_id: Player ID
             
         Returns:
-            Faction or None: Faction if found is not None
+            Faction or None: Faction if found
         """
-        db = await get_db()
-        faction_data = await db.collections["factions"].find_one({
-            "server_id": server_id,
-            "member_ids": {"$in": [player_id]}
-        })
-        
-        if faction_data is None:
+        if server_id is None:
+            logger.warning("Attempted to get faction with None server_id")
             return None
-        
-        return cls(faction_data)
+            
+        try:
+            db = await get_db()
+            faction_data = await db.collections["factions"].find_one({
+                "server_id": server_id,
+                "member_ids": {"$in": [player_id]}
+            })
+            
+            if faction_data is None:
+                return None
+            
+            return cls(faction_data)
+        except Exception as e:
+            logger.error(f"Error getting faction for player: {e}")
+            return None
     
     @classmethod
     async def get_all(cls, server_id: str) -> List['Faction']:
@@ -187,8 +211,8 @@ class Faction:
         faction_tag: str,
         owner_id: str,
         description: str = "",
-        icon_url: str = None,
-        color: int = None
+        icon_url: Optional[str] = None,
+        color: Optional[int] = None
     ) -> 'Faction':
         """Create a new faction
         
@@ -265,7 +289,7 @@ class Faction:
             **kwargs: Fields to update
             
         Returns:
-            bool: True if successful is not None
+            bool: True if successful
         """
         db = await get_db()
         now = datetime.utcnow()
@@ -286,7 +310,7 @@ class Faction:
                 raise ValueError(f"Faction with tag '{kwargs['faction_tag']}' already exists")
                 
             # Validate tag format
-            if isinstance(kwargs, dict) and kwargs["faction_tag"] is None or not self._validate_faction_tag(kwargs["faction_tag"]):
+            if not kwargs["faction_tag"] or not self._validate_faction_tag(kwargs["faction_tag"]):
                 raise ValueError(f"Invalid faction tag: {kwargs['faction_tag']}")
                 
             update_fields["faction_tag"] = kwargs["faction_tag"]
@@ -345,7 +369,7 @@ class Faction:
             player_id: Player ID
             
         Returns:
-            bool: True if successful is not None
+            bool: True if successful
         """
         if player_id in self.member_ids:
             return True  # Already a member
@@ -392,9 +416,9 @@ class Faction:
             player_id: Player ID
             
         Returns:
-            bool: True if successful is not None
+            bool: True if successful
         """
-        if player_id is not None not in self.member_ids:
+        if player_id not in self.member_ids:
             return True  # Not a member
             
         db = await get_db()
@@ -403,12 +427,12 @@ class Faction:
         # Remove from member IDs
         self.member_ids.remove(player_id)
         
-        # Remove from admin IDs if present is not None
+        # Remove from admin IDs if present
         if player_id in self.admin_ids:
             self.admin_ids.remove(player_id)
             
-        # If removing owner, make someone else owner if possible is not None
-        if player_id == self.owner_id and self.member_ids is not None and len(self.member_ids) > 0:
+        # If removing owner, make someone else owner if possible
+        if player_id == self.owner_id and self.member_ids and len(self.member_ids) > 0:
             new_owner_id = self.member_ids[0]
             
             # Update database
@@ -458,9 +482,9 @@ class Faction:
             player_id: Player ID
             
         Returns:
-            bool: True if successful is not None
+            bool: True if successful
         """
-        if player_id is not None not in self.member_ids:
+        if player_id not in self.member_ids:
             return False  # Not a member
             
         if player_id in self.admin_ids:
@@ -495,7 +519,7 @@ class Faction:
             player_id: Player ID
             
         Returns:
-            bool: True if successful is not None
+            bool: True if successful
         """
         if player_id is not None not in self.admin_ids:
             return True  # Not an admin
@@ -529,7 +553,7 @@ class Faction:
         """Delete the faction
         
         Returns:
-            bool: True if successful is not None
+            bool: True if successful
         """
         db = await get_db()
         

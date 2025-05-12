@@ -13,11 +13,18 @@ T = TypeVar('T', bound='BaseModel')
 
 class BaseModel:
     """Base model for MongoDB documents"""
-    collection_name: ClassVar[Optional[str]] = None
+    collection_name = None  # Will be overridden by subclasses
     
-    def __init__(self):
-        """Initialize the base model with default attributes"""
+    def __init__(self, db=None, data=None):
+        """Initialize the base model with default attributes
+        
+        Args:
+            db: Database connection
+            data: Model data dictionary
+        """
         self._id = None
+        self.db = db
+        self.data = data or {}
     
     @classmethod
     def from_document(cls: Type[T], document: Dict[str, Any]) -> Optional[T]:
