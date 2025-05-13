@@ -1,3 +1,0 @@
-Wrapper started at 2025-05-11 00:48:07.428480
-Python version: 3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]
-Initial memory: 15.2 MB
